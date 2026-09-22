@@ -1,0 +1,492 @@
+/*
+ * بخش «خلاصه نظرات کاربران» — ts-comments-overview
+ * ---------------------------------------------------------------------------
+ * این فایل هیچ رنگ ثابتی ندارد؛ همه‌ی رنگ‌ها از توکن‌های معنایی قالب
+ * (assets/css/theme-system.css) می‌آیند. به همین دلیل دارک و لایت خودکار درست
+ * است: توکن‌ها روی :root و body.dark مقدار عوض می‌کنند و اینجا چیزی تکرار
+ * نمی‌شود.
+ *
+ * استایل با وابستگی به amazing-theme-system صف‌بندی می‌شود تا همیشه بعد از
+ * لایه‌ی معنایی قالب بارگذاری شود.
+ */
+
+.ts-comments-overview {
+  box-sizing: border-box;
+  /*
+   * فاصله‌ی پایین کوچک است چون فهرست نظرات خودش margin-top دارد (۶۵px در دسکتاپ و
+   * ۴۰px در موبایل)؛ جمع این دو نباید یک حفره‌ی خالی بسازد.
+   */
+  margin: 0 0 8px;
+  padding: 20px 22px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  background: var(--surface-card);
+  color: var(--text-body);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.ts-comments-overview__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.ts-comments-overview__heading {
+  min-width: 0;
+}
+
+.ts-comments-overview__title {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 17px;
+  font-variation-settings: "wght" 650;
+  line-height: 1.7;
+}
+
+.ts-comments-overview__subtitle {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.ts-comments-overview__badge {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--theme-accent) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+  color: var(--text-strong);
+  font-size: 12px;
+  font-variation-settings: "wght" 650;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.ts-comments-overview__badge i {
+  color: var(--theme-accent);
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * ردیف آمار
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-comments-overview__stat {
+  display: flex;
+  flex: 1 1 150px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+
+.ts-comments-overview__stat-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-strong);
+  font-size: 18px;
+  font-variation-settings: "wght" 700;
+  line-height: 1.5;
+}
+
+.ts-comments-overview__stat-value i {
+  color: var(--theme-accent);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ts-comments-overview__stat-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------------------
+ * نوار احساسات
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__sentiment {
+  margin-top: 18px;
+}
+
+.ts-comments-overview__sentiment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ts-comments-overview__sentiment-title {
+  color: var(--text-strong);
+  font-size: 13px;
+  font-variation-settings: "wght" 650;
+}
+
+.ts-comments-overview__sentiment-total {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ts-comments-overview__bar {
+  display: flex;
+  width: 100%;
+  height: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-control);
+}
+
+.ts-comments-overview__bar-seg {
+  display: block;
+  /* سهم هر بخش با نسبت شمارش خام تعیین می‌شود تا جمع همیشه دقیقاً ۱۰۰٪ باشد. */
+  flex: var(--ts-co-count, 1) 1 0;
+  min-width: 0;
+  transition: flex-grow var(--theme-motion-duration) var(--theme-motion-ease);
+}
+
+.ts-comments-overview__bar-seg--positive {
+  background: var(--state-success);
+}
+
+.ts-comments-overview__bar-seg--neutral {
+  background: var(--state-neutral);
+}
+
+.ts-comments-overview__bar-seg--negative {
+  background: var(--state-danger);
+}
+
+.ts-comments-overview__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-comments-overview__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ts-comments-overview__legend-item strong {
+  color: var(--text-strong);
+  font-variation-settings: "wght" 650;
+}
+
+.ts-comments-overview__dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ts-comments-overview__legend-item--positive .ts-comments-overview__dot {
+  background: var(--state-success);
+}
+
+.ts-comments-overview__legend-item--neutral .ts-comments-overview__dot {
+  background: var(--state-neutral);
+}
+
+.ts-comments-overview__legend-item--negative .ts-comments-overview__dot {
+  background: var(--state-danger);
+}
+
+/* ---------------------------------------------------------------------------
+ * خلاصه
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__summary {
+  margin-top: 16px;
+  color: var(--text-body);
+  line-height: 2.1;
+  text-align: justify;
+}
+
+.ts-comments-overview__summary p {
+  margin: 0 0 8px;
+}
+
+.ts-comments-overview__summary ul {
+  margin: 6px 0 8px;
+  padding-inline-start: 18px;
+  list-style: disc;
+}
+
+.ts-comments-overview__summary li {
+  margin-bottom: 4px;
+}
+
+.ts-comments-overview__summary strong {
+  color: var(--text-strong);
+  font-variation-settings: "wght" 700;
+}
+
+/* ---------------------------------------------------------------------------
+ * موضوع‌ها
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__topics {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ts-comments-overview__topics-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-variation-settings: "wght" 650;
+}
+
+.ts-comments-overview__topics-title i {
+  color: var(--theme-accent);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ts-comments-overview__topics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-comments-overview__topic {
+  padding: 5px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-control);
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* ---------------------------------------------------------------------------
+ * نقاط قوت و ضعف
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.ts-comments-overview__panel {
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+
+.ts-comments-overview__panel--pros {
+  background: var(--state-success-surface);
+}
+
+.ts-comments-overview__panel--cons {
+  background: var(--state-danger-surface);
+}
+
+.ts-comments-overview__panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-variation-settings: "wght" 650;
+}
+
+.ts-comments-overview__panel--pros .ts-comments-overview__panel-title,
+.ts-comments-overview__panel--pros .ts-comments-overview__panel-title i {
+  color: var(--state-success);
+}
+
+.ts-comments-overview__panel--cons .ts-comments-overview__panel-title,
+.ts-comments-overview__panel--cons .ts-comments-overview__panel-title i {
+  color: var(--state-danger);
+}
+
+.ts-comments-overview__list {
+  margin: 0;
+  padding-inline-start: 18px;
+  color: var(--text-body);
+  list-style: disc;
+}
+
+.ts-comments-overview__list-item {
+  margin-bottom: 6px;
+  line-height: 1.9;
+}
+
+.ts-comments-overview__panel--pros .ts-comments-overview__list-item::marker {
+  color: var(--state-success);
+}
+
+.ts-comments-overview__panel--cons .ts-comments-overview__list-item::marker {
+  color: var(--state-danger);
+}
+
+/* ---------------------------------------------------------------------------
+ * پانویس: منابع، تاریخ، سلب مسئولیت
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ts-comments-overview__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.ts-comments-overview__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.ts-comments-overview__chip i {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ts-comments-overview__chip--stale {
+  border-color: color-mix(in srgb, var(--state-warning) 50%, transparent);
+  background: var(--state-warning-surface);
+  color: var(--state-warning);
+}
+
+.ts-comments-overview__sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-comments-overview__sources-title {
+  color: var(--text-body);
+  font-size: 12px;
+}
+
+.ts-comments-overview__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-control);
+  font-size: 12px;
+  line-height: 1.9;
+}
+
+.ts-comments-overview__source-name {
+  color: var(--text-strong);
+  font-variation-settings: "wght" 650;
+}
+
+.ts-comments-overview__source-meta {
+  color: var(--text-body);
+}
+
+.ts-comments-overview__disclosure {
+  margin: 10px 0 0;
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.9;
+  opacity: 0.85;
+}
+
+/* ---------------------------------------------------------------------------
+ * موبایل
+ * ------------------------------------------------------------------------ */
+
+@media (max-width: 991.98px) {
+  .ts-comments-overview {
+    padding: 16px 14px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+  }
+
+  .ts-comments-overview__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ts-comments-overview__badge {
+    align-self: flex-start;
+  }
+
+  .ts-comments-overview__stat {
+    flex: 1 1 100%;
+    padding: 8px 12px;
+  }
+
+  .ts-comments-overview__stat-value {
+    font-size: 16px;
+  }
+
+  .ts-comments-overview__panels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ts-comments-overview__summary {
+    text-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-comments-overview__bar-seg {
+    transition: none;
+  }
+}
