@@ -50,13 +50,14 @@ ts_co_assert_contains( '62٪', $html, 'درصد مثبت در راهنما نم�
 
 // موضوع‌ها
 ts_co_assert_contains( 'ts-comments-overview__topics-list', $html, 'فهرست موضوع‌ها رندر می‌شود' );
-ts_co_assert_contains( '<li class="ts-comments-overview__topic">کیفیت صدا</li>', $html, 'موضوع‌ها به‌عنوان برچسب نمایش داده می‌شوند' );
+ts_co_assert_contains( 'ts-comments-overview__topic-label">کیفیت صدا<', $html, 'موضوع‌ها به‌عنوان برچسب نمایش داده می‌شوند' );
 
 // منابع و پانویس
-ts_co_assert_contains( 'بر پایه‌ی 2 منبع', $html, 'تعداد منابع نمایش داده می‌شود' );
-ts_co_assert_contains( 'دیجی‌کالا', $html, 'نام منبع دوم نمایش داده می‌شود' );
+ts_co_assert_not_contains( 'بر پایه‌ی 2 منبع', $html, 'تعداد منابع نمایش داده نمی‌شود' );
+ts_co_assert_not_contains( 'دیجی‌کالا', $html, 'نام منبع در رابط کاربری نیست' );
+ts_co_assert_not_contains( 'ts-comments-overview__source', $html, 'هیچ عنصر منبعی در خروجی نیست' );
 ts_co_assert_contains( '2026-08-01', $html, 'تاریخ آخرین به‌روزرسانی (شمسی/میلادی بر پایه‌ی قالب سایت) نمایش داده می‌شود' );
-ts_co_assert_contains( 'این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های مرجع ساخته شده است', $html, 'سلب مسئولیت ذکر می‌شود' );
+ts_co_assert_contains( 'این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های دیگر ساخته شده است', $html, 'سلب مسئولیت ذکر می‌شود' );
 ts_co_assert_not_contains( 'به‌روزرسانی در انتظار است', $html, 'برای داده‌ی تازه، هشدار کهنگی نمایش داده نمی‌شود' );
 
 // در حالت خلاصه، نقاط قوت و ضعف نباید نمایش داده شوند.
@@ -77,8 +78,9 @@ ts_co_assert_contains( 'ts-comments-overview__panel--pros', $html, 'پنل نق�
 ts_co_assert_contains( 'ts-comments-overview__panel--cons', $html, 'پنل نقاط ضعف رندر می‌شود' );
 ts_co_assert_contains( 'نقاط قوت', $html, 'عنوان نقاط قوت نمایش داده می‌شود' );
 ts_co_assert_contains( 'نقاط ضعف', $html, 'عنوان نقاط ضعف نمایش داده می‌شود' );
-ts_co_assert_contains( '<li class="ts-comments-overview__list-item">کیفیت صدا و تفکیک سازها</li>', $html, 'آیتم‌های نقاط قوت نمایش داده می‌شوند' );
-ts_co_assert_contains( '<li class="ts-comments-overview__list-item">عمر باتری کوتاه‌تر از انتظار</li>', $html, 'آیتم‌های نقاط ضعف نمایش داده می‌شوند' );
+ts_co_assert_contains( 'ts-comments-overview__list-item', $html, 'آیتم‌های نقاط قوت به‌صورت فهرست رندر می‌شوند' );
+ts_co_assert_contains( 'کیفیت صدا و تفکیک سازها', $html, 'متن نقاط قوت نمایش داده می‌شود' );
+ts_co_assert_contains( 'عمر باتری کوتاه‌تر از انتظار', $html, 'متن نقاط ضعف نمایش داده می‌شود' );
 ts_co_assert_contains( 'icon-like', $html, 'آیکون قوت از مجموعه آیکون‌های قالب است' );
 ts_co_assert_contains( 'icon-dislike', $html, 'آیکون ضعف از مجموعه آیکون‌های قالب است' );
 

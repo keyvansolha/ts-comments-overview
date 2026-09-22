@@ -33,8 +33,6 @@ $ts_co_total          = (int) $ts_co_sentiment['total'];
 $ts_co_rating         = isset( $data['rating'] ) ? $data['rating'] : null;
 $ts_co_recommend      = isset( $data['recommend_percentage'] ) ? $data['recommend_percentage'] : null;
 $ts_co_comments       = isset( $data['total_comments'] ) ? $data['total_comments'] : null;
-$ts_co_sources        = isset( $data['providers'] ) && is_array( $data['providers'] ) ? $data['providers'] : array();
-$ts_co_provider_count = isset( $data['source_provider_count'] ) ? $data['source_provider_count'] : null;
 $ts_co_summary_html   = TS_Comments_Overview_Payload::format_text( isset( $data['summary'] ) ? (string) $data['summary'] : '' );
 $ts_co_topics         = isset( $data['topics'] ) && is_array( $data['topics'] ) ? $data['topics'] : array();
 $ts_co_strengths      = isset( $data['strengths'] ) && is_array( $data['strengths'] ) ? $data['strengths'] : array();
@@ -46,12 +44,22 @@ $ts_co_stale          = ! empty( $data['stale'] );
 $ts_co_show_pros_cons = TS_Comments_Overview_Settings::shows_pros_cons()
 	&& ( ! empty( $ts_co_strengths ) || ! empty( $ts_co_weaknesses ) );
 
-$ts_co_source_count = null !== $ts_co_provider_count
-	? (int) $ts_co_provider_count
-	: ( ! empty( $ts_co_sources ) ? count( $ts_co_sources ) : null );
+/*
+ * منبع نظرات (نام سایتهای مرجع و تعدادشان) عمداً در رابط کاربری نمایش داده
+ * نمی‌شود. داده‌ی providers همچنان در ساختار داخلی و در ابزار بررسی پیشخوان
+ * در دسترس است.
+ */
 
 // اگر هیچ عددی برای نمایش نباشد، ردیف آمار ساخته نمی‌شود.
 $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empty( $ts_co_comments );
+
+/*
+ * مبنای نوار احساسات: عدد واقعی تعداد نظرات (totalComments) است، نه جمع مقادیر
+ * sentiment. سرویس ممکن است sentiment را درصدی بدهد (مثلاً ۸۰/۱۰/۱۰ که جمعشان
+ * ۱۰۰ است) و در آن حالت چاپ «بر پایه‌ی ۱۰۰ نظر» نادرست می‌شد. نسبت‌ها در هر دو
+ * حالت از همان مقادیر حساب می‌شوند و درست می‌مانند.
+ */
+$ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $ts_co_total;
 ?>
 <section class="ts-comments-overview" dir="rtl" aria-labelledby="ts-comments-overview-title">
 	<header class="ts-comments-overview__header">
@@ -113,7 +121,7 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 			<div class="ts-comments-overview__sentiment-head">
 				<span class="ts-comments-overview__sentiment-title">حال‌و‌هوای کلی نظرات</span>
 				<span class="ts-comments-overview__sentiment-total">
-					بر پایه‌ی <?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_total ) ); ?> نظر تحلیل‌شده
+					بر پایه‌ی <?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_sentiment_basis ) ); ?> نظر تحلیل‌شده
 				</span>
 			</div>
 
@@ -183,7 +191,14 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 			</span>
 			<ul class="ts-comments-overview__topics-list">
 				<?php foreach ( $ts_co_topics as $ts_co_topic ) : ?>
-					<li class="ts-comments-overview__topic"><?php echo esc_html( $ts_co_topic ); ?></li>
+					<li class="ts-comments-overview__topic">
+						<span class="ts-comments-overview__topic-label"><?php echo esc_html( $ts_co_topic['label'] ); ?></span>
+						<?php if ( null !== $ts_co_topic['count'] && $ts_co_topic['count'] > 0 ) : ?>
+							<span class="ts-comments-overview__topic-count">
+								<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_topic['count'] ) ); ?>
+							</span>
+						<?php endif; ?>
+					</li>
 				<?php endforeach; ?>
 			</ul>
 		</div>
@@ -199,7 +214,14 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 					</p>
 					<ul class="ts-comments-overview__list">
 						<?php foreach ( $ts_co_strengths as $ts_co_strength ) : ?>
-							<li class="ts-comments-overview__list-item"><?php echo esc_html( $ts_co_strength ); ?></li>
+							<li class="ts-comments-overview__list-item">
+								<?php echo esc_html( $ts_co_strength['text'] ); ?>
+								<?php if ( null !== $ts_co_strength['count'] && $ts_co_strength['count'] > 0 ) : ?>
+									<span class="ts-comments-overview__list-count">
+										<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_strength['count'] ) ); ?> نظر
+									</span>
+								<?php endif; ?>
+							</li>
 						<?php endforeach; ?>
 					</ul>
 				</div>
@@ -213,7 +235,14 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 					</p>
 					<ul class="ts-comments-overview__list">
 						<?php foreach ( $ts_co_weaknesses as $ts_co_weakness ) : ?>
-							<li class="ts-comments-overview__list-item"><?php echo esc_html( $ts_co_weakness ); ?></li>
+							<li class="ts-comments-overview__list-item">
+								<?php echo esc_html( $ts_co_weakness['text'] ); ?>
+								<?php if ( null !== $ts_co_weakness['count'] && $ts_co_weakness['count'] > 0 ) : ?>
+									<span class="ts-comments-overview__list-count">
+										<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_weakness['count'] ) ); ?> نظر
+									</span>
+								<?php endif; ?>
+							</li>
 						<?php endforeach; ?>
 					</ul>
 				</div>
@@ -230,13 +259,6 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 				</span>
 			<?php endif; ?>
 
-			<?php if ( null !== $ts_co_source_count && $ts_co_source_count > 0 ) : ?>
-				<span class="ts-comments-overview__chip">
-					<i class="icon-global" aria-hidden="true"></i>
-					بر پایه‌ی <?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_source_count ) ); ?> منبع
-				</span>
-			<?php endif; ?>
-
 			<?php if ( '' !== $ts_co_updated ) : ?>
 				<span class="ts-comments-overview__chip">
 					<i class="icon-clock" aria-hidden="true"></i>
@@ -245,24 +267,8 @@ $ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empt
 			<?php endif; ?>
 		</p>
 
-		<?php if ( ! empty( $ts_co_sources ) ) : ?>
-			<ul class="ts-comments-overview__sources">
-				<li class="ts-comments-overview__sources-title">منابع:</li>
-				<?php foreach ( $ts_co_sources as $ts_co_source ) : ?>
-					<li class="ts-comments-overview__source">
-						<span class="ts-comments-overview__source-name"><?php echo esc_html( $ts_co_source['name'] ); ?></span>
-						<?php if ( null !== $ts_co_source['comments'] && $ts_co_source['comments'] > 0 ) : ?>
-							<span class="ts-comments-overview__source-meta">
-								<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_source['comments'] ) ); ?> نظر
-							</span>
-						<?php endif; ?>
-					</li>
-				<?php endforeach; ?>
-			</ul>
-		<?php endif; ?>
-
 		<p class="ts-comments-overview__disclosure">
-			این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های مرجع ساخته شده است و نظر یا تأیید تهران‌اسپیکر نیست.
+			این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های دیگر ساخته شده است و نظر یا تأیید تهران‌اسپیکر نیست.
 		</p>
 	</footer>
 </section>

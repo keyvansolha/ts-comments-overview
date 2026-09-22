@@ -45,9 +45,15 @@ ts_co_assert_same( 0, $empty['sentiment']['total'], 'sentiment نامعتبر ص
 ts_co_assert_same( array(), $empty['topics'], 'topics نامعتبر آرایه‌ی خالی می‌شود' );
 ts_co_assert_empty( $empty['rating'], 'امتیاز نامعتبر خالی می‌ماند' );
 ts_co_assert_same(
-	array( 'یک موضوع متنی' ),
+	array(
+		array(
+			'label'     => 'یک موضوع متنی',
+			'count'     => null,
+			'direction' => '',
+		),
+	),
 	TS_Comments_Overview_Payload::normalize( array( 'topics' => 'یک موضوع متنی' ) )['topics'],
-	'موضوعِ رشته‌ای به فهرست تک‌آیتمی تبدیل می‌شود'
+	'موضوعِ رشته‌ای به آیتم ساختاریافته تبدیل می‌شود'
 );
 
 // محدودسازی اعداد.

@@ -34,7 +34,11 @@ final class TS_Comments_Overview_Payload {
 	/**
 	 * باز کردن پوشش پاسخ سرویس.
 	 *
-	 * پاسخ می‌تواند مستقیم رکورد باشد یا داخل data / result / results باشد.
+	 * پاسخ سرویس می‌تواند یکی از این شکل‌ها باشد:
+	 *   - { woocommerce_id: 238607, analysis: { ...رکورد... } }   ← شکل واقعی سرویس
+	 *   - { data: { ...رکورد... } } / { result: ... } / { record: ... }
+	 *   - { results: [ { ...رکورد... } ] } / { items: [...] }
+	 *   - خودِ رکورد بدون پوشش
 	 *
 	 * @param array<mixed> $body بدنه‌ی JSON.
 	 * @return array<mixed>
@@ -44,7 +48,7 @@ final class TS_Comments_Overview_Payload {
 			return $body;
 		}
 
-		foreach ( array( 'data', 'result', 'record' ) as $key ) {
+		foreach ( array( 'analysis', 'data', 'result', 'record' ) as $key ) {
 			if ( isset( $body[ $key ] ) && is_array( $body[ $key ] ) && self::looks_like_record( $body[ $key ] ) ) {
 				return $body[ $key ];
 			}
@@ -56,6 +60,14 @@ final class TS_Comments_Overview_Payload {
 				if ( is_array( $first ) && self::looks_like_record( $first ) ) {
 					return $first;
 				}
+			}
+		}
+
+		// آخرین تلاش: هر مقدار آرایه‌ای سطح اول که شکل رکورد داشته باشد (نام پوشش
+		// در سرویس می‌تواند بعداً عوض شود؛ این‌جا به نام کلید وابسته نمی‌مانیم).
+		foreach ( $body as $value ) {
+			if ( is_array( $value ) && self::looks_like_record( $value ) ) {
+				return $value;
 			}
 		}
 
@@ -91,10 +103,10 @@ final class TS_Comments_Overview_Payload {
 
 		return array(
 			'summary'              => self::plain( self::pick( $record, array( 'summary', 'overview', 'text' ) ), self::MAX_SUMMARY ),
-			'topics'               => self::string_list( self::pick( $record, array( 'topics', 'keywords' ) ), self::MAX_TOPICS ),
+			'topics'               => self::topics( self::pick( $record, array( 'topics', 'keywords' ) ), self::MAX_TOPICS ),
 			'sentiment'            => $sentiment,
-			'strengths'            => self::string_list( self::pick( $record, array( 'strengths', 'pros', 'positivePoints' ) ), self::MAX_LIST ),
-			'weaknesses'           => self::string_list( self::pick( $record, array( 'weaknesses', 'cons', 'negativePoints' ) ), self::MAX_LIST ),
+			'strengths'            => self::points( self::pick( $record, array( 'strengths', 'pros', 'positivePoints' ) ), self::MAX_LIST ),
+			'weaknesses'           => self::points( self::pick( $record, array( 'weaknesses', 'cons', 'negativePoints' ) ), self::MAX_LIST ),
 			'rating'               => self::to_float( self::pick( $record, array( 'overallRating', 'overall_rating', 'rating' ) ), 0, 5 ),
 			'total_comments'       => self::to_int( self::pick( $record, array( 'totalComments', 'comment_count', 'commentCount' ) ), 0, 100000000 ),
 			'recommend_percentage' => self::to_int( self::pick( $record, array( 'recommendPercentage', 'recommend_percentage' ) ), 0, 100 ),
@@ -325,6 +337,122 @@ final class TS_Comments_Overview_Payload {
 		}
 
 		return substr( $text, 0, $limit );
+	}
+
+	/**
+	 * نرمال‌سازی موضوع‌ها.
+	 *
+	 * شکل واقعی سرویس: { count: 10, label: "کیفیت صدا", direction: "up" }
+	 * رشته‌ی ساده هم پذیرفته می‌شود (سازگاری با نسخه‌های قبلی/سایر شکل‌ها).
+	 *
+	 * «direction» فقط در ساختار داخلی نگه داشته می‌شود و در رابط کاربری نمایش
+	 * داده نمی‌شود؛ چون معنای دقیق آن (روند یا قطبیت) از سرویس تأیید نشده است و
+	 * نمایش حدسی آن می‌تواند گمراه‌کننده باشد.
+	 *
+	 * @param mixed $raw   مقدار خام.
+	 * @param int   $limit حداکثر تعداد.
+	 * @return array<int,array{label:string,count:?int,direction:string}>
+	 */
+	public static function topics( $raw, $limit ) {
+		$entries = self::entries( $raw );
+		$items   = array();
+
+		foreach ( $entries as $entry ) {
+			if ( count( $items ) >= (int) $limit ) {
+				break;
+			}
+
+			$label = self::single_line(
+				self::plain(
+					is_array( $entry ) ? self::pick( $entry, array( 'label', 'text', 'title', 'name', 'topic', 'value' ), '' ) : $entry,
+					self::MAX_ITEM
+				)
+			);
+
+			if ( '' === $label ) {
+				continue;
+			}
+
+			$direction = '';
+
+			if ( is_array( $entry ) ) {
+				$raw_direction = strtolower( self::plain( self::pick( $entry, array( 'direction', 'dir', 'trend' ), '' ), 12 ) );
+
+				if ( in_array( $raw_direction, array( 'up', 'increase', 'rising' ), true ) ) {
+					$direction = 'up';
+				} elseif ( in_array( $raw_direction, array( 'down', 'decrease', 'falling' ), true ) ) {
+					$direction = 'down';
+				}
+			}
+
+			$items[] = array(
+				'label'     => $label,
+				'count'     => is_array( $entry ) ? self::to_int( self::pick( $entry, array( 'count', 'comments', 'mentions' ), null ), 0, 100000000 ) : null,
+				'direction' => $direction,
+			);
+		}
+
+		return $items;
+	}
+
+	/**
+	 * نرمال‌سازی فهرست نقاط قوت/ضعف.
+	 *
+	 * شکل واقعی سرویس: { text: "کیفیت صدا", count: 10 }
+	 *
+	 * @param mixed $raw   مقدار خام.
+	 * @param int   $limit حداکثر تعداد.
+	 * @return array<int,array{text:string,count:?int}>
+	 */
+	public static function points( $raw, $limit ) {
+		$entries = self::entries( $raw );
+		$items   = array();
+
+		foreach ( $entries as $entry ) {
+			if ( count( $items ) >= (int) $limit ) {
+				break;
+			}
+
+			$text = self::single_line( self::plain( $entry, self::MAX_ITEM ) );
+
+			if ( '' === $text ) {
+				continue;
+			}
+
+			$items[] = array(
+				'text'  => $text,
+				'count' => is_array( $entry ) ? self::to_int( self::pick( $entry, array( 'count', 'comments', 'mentions' ), null ), 0, 100000000 ) : null,
+			);
+		}
+
+		return $items;
+	}
+
+	/**
+	 * تبدیل ورودی خام به فهرست آیتم‌ها (رشته‌ی چندخطی هم پشتیبانی می‌شود).
+	 *
+	 * @param mixed $raw مقدار خام.
+	 * @return array<mixed>
+	 */
+	private static function entries( $raw ) {
+		if ( is_string( $raw ) ) {
+			$raw = preg_split( '/\r\n|\r|\n/', $raw );
+		}
+
+		return is_array( $raw ) ? $raw : array();
+	}
+
+	/**
+	 * یک‌خطی کردن متن (برای برچسب‌ها و آیتم‌های فهرست).
+	 *
+	 * @param string $text متن.
+	 * @return string
+	 */
+	private static function single_line( $text ) {
+		$text = preg_replace( '/\s+/u', ' ', (string) $text );
+		$text = is_string( $text ) ? trim( $text ) : '';
+
+		return self::limit( $text, self::MAX_ITEM );
 	}
 
 	/**

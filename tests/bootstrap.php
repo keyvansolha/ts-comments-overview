@@ -21,8 +21,14 @@ define( 'ABSPATH', dirname( __DIR__ ) . '/' );
  *
  * پیش از بارگذاری افزونه تعریف می‌شود تا همان مسیر wp-config.php در تست
  * اجرا شود (افزونه با defined() مقدار را بازنویسی نمی‌کند).
+ *
+ * برای تست زنده علیه سرویس واقعی، توکن را در متغیر محیطی TSCO_API_TOKEN بدهید و
+ * TSCO_REAL_HTTP=1 را هم ست کنید (توکن هیچ‌وقت داخل مخزن ذخیره نمی‌شود).
  */
-define( 'TS_COMMENTS_OVERVIEW_API_TOKEN', 'test-token-abcdefghijklmnop-1234567890' );
+define(
+	'TS_COMMENTS_OVERVIEW_API_TOKEN',
+	(string) ( getenv( 'TSCO_API_TOKEN' ) ?: 'test-token-abcdefghijklmnop-1234567890' )
+);
 
 /** مسیر قالب واقعی، برای بررسی یکپارچگی هوک. */
 define( 'TS_CO_TEST_THEME_DIR', '/mnt/K1/git/Site/public_html/wp-content/themes/amazing' );
@@ -306,6 +312,46 @@ function wp_remote_get( $url, $args = array() ) {
 
 	if ( is_callable( $handler ) ) {
 		return call_user_func( $handler, $url, $args );
+	}
+
+	/*
+	 * حالت اختیاری تست زنده: با TSCO_REAL_HTTP=1 و توکن در TSCO_API_TOKEN، همین
+	 * تابع درخواست واقعی می‌زند تا کد کلاینت افزونه سرتاسری بررسی شود.
+	 */
+	if ( getenv( 'TSCO_REAL_HTTP' ) && function_exists( 'curl_init' ) ) {
+		$headers = array();
+
+		if ( isset( $args['headers'] ) && is_array( $args['headers'] ) ) {
+			foreach ( $args['headers'] as $name => $value ) {
+				$headers[] = $name . ': ' . $value;
+			}
+		}
+
+		$curl = curl_init( $url );
+		curl_setopt_array(
+			$curl,
+			array(
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_FOLLOWLOCATION => false,
+				CURLOPT_TIMEOUT        => isset( $args['timeout'] ) ? (int) $args['timeout'] : 10,
+				CURLOPT_HTTPHEADER     => $headers,
+				CURLOPT_USERAGENT      => isset( $args['user-agent'] ) ? (string) $args['user-agent'] : 'ts-co-live-test',
+			)
+		);
+
+		$body   = curl_exec( $curl );
+		$status = (int) curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
+		$error  = curl_error( $curl );
+		curl_close( $curl );
+
+		if ( false === $body ) {
+			return new WP_Error( 'http_request_failed', (string) $error );
+		}
+
+		return array(
+			'response' => array( 'code' => $status ),
+			'body'     => (string) $body,
+		);
 	}
 
 	return new WP_Error( 'no_handler', 'no HTTP handler registered in tests' );

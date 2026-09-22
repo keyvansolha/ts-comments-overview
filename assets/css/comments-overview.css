@@ -288,6 +288,9 @@
 }
 
 .ts-comments-overview__topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 5px 12px;
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
@@ -295,6 +298,14 @@
   color: var(--text-body);
   font-size: 12px;
   line-height: 1.8;
+}
+
+.ts-comments-overview__topic-count {
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variation-settings: "wght" 650;
 }
 
 /* ---------------------------------------------------------------------------
@@ -353,6 +364,17 @@
   line-height: 1.9;
 }
 
+/*
+ * شمارش نظرها درون خود li می‌ماند (li نباید flex شود، وگرنه نشانگر فهرست حذف
+ * می‌شود) و به‌صورت متنی کوتاه کنار آیتم نمایش داده می‌شود.
+ */
+.ts-comments-overview__list-count {
+  margin-inline-start: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .ts-comments-overview__panel--pros .ts-comments-overview__list-item::marker {
   color: var(--state-success);
 }
@@ -400,42 +422,6 @@
   border-color: color-mix(in srgb, var(--state-warning) 50%, transparent);
   background: var(--state-warning-surface);
   color: var(--state-warning);
-}
-
-.ts-comments-overview__sources {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ts-comments-overview__sources-title {
-  color: var(--text-body);
-  font-size: 12px;
-}
-
-.ts-comments-overview__source {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-control);
-  font-size: 12px;
-  line-height: 1.9;
-}
-
-.ts-comments-overview__source-name {
-  color: var(--text-strong);
-  font-variation-settings: "wght" 650;
-}
-
-.ts-comments-overview__source-meta {
-  color: var(--text-body);
 }
 
 .ts-comments-overview__disclosure {
