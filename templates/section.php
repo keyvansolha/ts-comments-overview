@@ -38,7 +38,6 @@ $ts_co_topics         = isset( $data['topics'] ) && is_array( $data['topics'] ) 
 $ts_co_strengths      = isset( $data['strengths'] ) && is_array( $data['strengths'] ) ? $data['strengths'] : array();
 $ts_co_weaknesses     = isset( $data['weaknesses'] ) && is_array( $data['weaknesses'] ) ? $data['weaknesses'] : array();
 $ts_co_is_derived     = ! empty( $data['is_derived'] );
-$ts_co_stale          = ! empty( $data['stale'] );
 
 $ts_co_show_pros_cons = TS_Comments_Overview_Settings::shows_pros_cons()
 	&& ( ! empty( $ts_co_strengths ) || ! empty( $ts_co_weaknesses ) );
@@ -50,7 +49,7 @@ $ts_co_show_pros_cons = TS_Comments_Overview_Settings::shows_pros_cons()
  */
 
 // اگر هیچ عددی برای نمایش نباشد، ردیف آمار ساخته نمی‌شود.
-$ts_co_has_stats = null !== $ts_co_rating || null !== $ts_co_recommend || ! empty( $ts_co_comments );
+$ts_co_has_scores = null !== $ts_co_rating || null !== $ts_co_recommend;
 
 /*
  * مبنای نوار احساسات: عدد واقعی تعداد نظرات (totalComments) است، نه جمع مقادیر
@@ -63,50 +62,51 @@ $ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $t
 <section class="ts-comments-overview" dir="rtl" aria-labelledby="ts-comments-overview-title">
 	<header class="ts-comments-overview__header">
 		<div class="ts-comments-overview__heading">
+			<span class="ts-comments-overview__badge">
+				<i class="icon-chat" aria-hidden="true"></i>
+				<?php echo $ts_co_is_derived ? 'خلاصه‌ی هوشمند' : 'خلاصه‌ی نظرات'; ?>
+			</span>
 			<h3 id="ts-comments-overview-title" class="ts-comments-overview__title">
 				آنچه کاربران در اینترنت درباره این محصول می‌گویند
 			</h3>
 			<p class="ts-comments-overview__subtitle">جمع‌بندی خودکار نظراتی که کاربران در سایت‌های دیگر ثبت کرده‌اند.</p>
-		</div>
-		<span class="ts-comments-overview__badge">
-			<i class="icon-chat" aria-hidden="true"></i>
-			<?php echo $ts_co_is_derived ? 'خلاصه‌ی هوشمند' : 'خلاصه‌ی نظرات'; ?>
-		</span>
-	</header>
-
-	<?php if ( $ts_co_has_stats ) : ?>
-		<ul class="ts-comments-overview__stats">
-			<?php if ( null !== $ts_co_rating ) : ?>
-				<li class="ts-comments-overview__stat">
-					<span class="ts-comments-overview__stat-value">
-						<i class="icon-star-empty" aria-hidden="true"></i>
-						<?php echo esc_html( TS_Comments_Overview_Render::rating_label( $ts_co_rating ) ); ?>
-					</span>
-					<span class="ts-comments-overview__stat-label">امتیاز کل</span>
-				</li>
-			<?php endif; ?>
-
-			<?php if ( null !== $ts_co_recommend ) : ?>
-				<li class="ts-comments-overview__stat">
-					<span class="ts-comments-overview__stat-value">
-						<i class="icon-like" aria-hidden="true"></i>
-						<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_recommend ) ); ?>٪
-					</span>
-					<span class="ts-comments-overview__stat-label">پیشنهاد می‌کنند</span>
-				</li>
-			<?php endif; ?>
 
 			<?php if ( ! empty( $ts_co_comments ) ) : ?>
-				<li class="ts-comments-overview__stat">
-					<span class="ts-comments-overview__stat-value">
-						<i class="icon-chat" aria-hidden="true"></i>
-						<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_comments ) ); ?>
-					</span>
-					<span class="ts-comments-overview__stat-label">نظر از سایت‌های دیگر</span>
-				</li>
+				<p class="ts-comments-overview__reviews-note">
+					<i class="icon-chat" aria-hidden="true"></i>
+					<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_comments ) ); ?> نظر از سایت‌های دیگر
+				</p>
 			<?php endif; ?>
-		</ul>
-	<?php endif; ?>
+		</div>
+
+		<?php if ( $ts_co_has_scores ) : ?>
+			<ul class="ts-comments-overview__scores">
+				<?php if ( null !== $ts_co_rating ) : ?>
+					<li class="ts-comments-overview__score ts-comments-overview__score--rating">
+						<span class="ts-comments-overview__score-icon">
+							<i class="icon-star-empty" aria-hidden="true"></i>
+						</span>
+						<span class="ts-comments-overview__score-value">
+							<?php echo esc_html( TS_Comments_Overview_Render::rating_label( $ts_co_rating ) ); ?>
+						</span>
+						<span class="ts-comments-overview__score-label">امتیاز کل</span>
+					</li>
+				<?php endif; ?>
+
+				<?php if ( null !== $ts_co_recommend ) : ?>
+					<li class="ts-comments-overview__score ts-comments-overview__score--recommend">
+						<span class="ts-comments-overview__score-icon">
+							<i class="icon-like" aria-hidden="true"></i>
+						</span>
+						<span class="ts-comments-overview__score-value">
+							<?php echo esc_html( TS_Comments_Overview_Render::number_label( $ts_co_recommend ) ); ?>٪
+						</span>
+						<span class="ts-comments-overview__score-label">پیشنهاد می‌کنند</span>
+					</li>
+				<?php endif; ?>
+			</ul>
+		<?php endif; ?>
+	</header>
 
 	<?php if ( $ts_co_total > 0 ) : ?>
 		<?php
@@ -271,15 +271,6 @@ $ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $t
 	<?php endif; ?>
 
 	<footer class="ts-comments-overview__footer">
-		<?php if ( $ts_co_stale ) : ?>
-			<p class="ts-comments-overview__meta">
-				<span class="ts-comments-overview__chip ts-comments-overview__chip--stale">
-					<i class="icon-history" aria-hidden="true"></i>
-					به‌روزرسانی در انتظار است
-				</span>
-			</p>
-		<?php endif; ?>
-
 		<p class="ts-comments-overview__disclosure">
 			این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های اینترنتی دیگر ساخته شده است و نظر یا تأیید تهران‌اسپیکر نیست.
 		</p>

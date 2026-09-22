@@ -41,6 +41,14 @@ ts_co_assert_contains( '<strong>عمر باتری</strong>', $html, 'پررنگ�
 ts_co_assert_contains( '4.3', $html, 'امتیاز کل نمایش داده می‌شود' );
 ts_co_assert_contains( '78٪', $html, 'درصد پیشنهاد نمایش داده می‌شود' );
 ts_co_assert_contains( '135', $html, 'تعداد نظرات بررسی‌شده نمایش داده می‌شود' );
+ts_co_assert_contains( 'ts-comments-overview__scores', $html, 'امتیاز کل و درصد پیشنهاد در هدر و در کارت‌های برجسته هستند' );
+ts_co_assert_contains( 'ts-comments-overview__score-value', $html, 'عدد امتیاز کلاس اختصاصی کارت را دارد' );
+ts_co_assert_contains( 'ts-comments-overview__reviews-note', $html, 'تعداد نظرات به‌صورت خط کوچک زیر عنوان می‌آید' );
+ts_co_assert_not_contains( 'ts-comments-overview__stat"', $html, 'ردیف آمار قبلی حذف شده است' );
+ts_co_assert_true(
+	strpos( $html, 'ts-comments-overview__scores' ) < strpos( $html, 'ts-comments-overview__sentiment' ),
+	'کارت‌های امتیاز پیش از نوار احساسات (در هدر) قرار دارند'
+);
 
 // احساسات (۶۲/۲۷/۱۱ از ۱۰۰)
 ts_co_assert_contains( 'ts-comments-overview__bar-seg--positive', $html, 'نوار احساسات: بخش مثبت وجود دارد' );
@@ -161,7 +169,13 @@ $stale = ts_co_fixture_payload();
 $stale['stale'] = true;
 ts_co_set_http_response( 200, $stale );
 $html = TS_Comments_Overview_Render::get_html( 4321 );
-ts_co_assert_contains( 'به‌روزرسانی در انتظار است', $html, 'داده‌ی کهنه هشدار می‌گیرد' );
+/*
+ * نشان کهنگی داده عمداً حذف شده است: «به‌روزرسانی در انتظار است» برای بازدیدکننده
+ * معنایی نداشت و در کارت زرد دیده می‌شد.
+ */
+ts_co_assert_not_contains( 'به‌روزرسانی در انتظار است', $html, 'نشان کهنگی داده نمایش داده نمی‌شود' );
+ts_co_assert_not_contains( 'ts-comments-overview__chip', $html, 'هیچ نشان کهنگی‌ای در خروجی نیست' );
+ts_co_assert_contains( 'این خلاصه به‌صورت خودکار', $html, 'متن سلب مسئولیت باقی می‌ماند' );
 
 // ---------------------------------------------------------------------------
 // بدون داده / خطا

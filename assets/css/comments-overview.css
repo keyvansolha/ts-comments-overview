@@ -58,7 +58,9 @@
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
+  align-self: flex-start;
   gap: 6px;
+  margin-bottom: 8px;
   padding: 6px 12px;
   border: 1px solid color-mix(in srgb, var(--theme-accent) 45%, transparent);
   border-radius: 999px;
@@ -77,50 +79,79 @@
 }
 
 /* ---------------------------------------------------------------------------
- * ردیف آمار
+ * امتیاز کل و درصد پیشنهاد — کارت‌های برجسته در هدر
+ *
+ * این دو عدد مهم‌ترین نتیجه‌ی تحلیل‌اند، پس از ردیف آمار پایین‌تر به هدر و کنار
+ * عنوان منتقل شده‌اند و بزرگ‌تر و برجسته‌تر از بقیه‌ی اجزا هستند.
  * ------------------------------------------------------------------------ */
 
-.ts-comments-overview__stats {
+.ts-comments-overview__scores {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
   gap: 10px;
-  margin: 16px 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.ts-comments-overview__stat {
+.ts-comments-overview__score {
   display: flex;
-  flex: 1 1 150px;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 2px;
-  min-width: 0;
-  padding: 10px 14px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  min-width: 104px;
+  padding: 10px 16px 12px;
+  border: 1px solid var(--border-control);
+  border-radius: 14px;
   background: var(--surface-raised);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--shadow-color) 55%, transparent);
 }
 
-.ts-comments-overview__stat-value {
+.ts-comments-overview__score-icon {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: var(--text-strong);
-  font-size: 18px;
-  font-variation-settings: "wght" 700;
-  line-height: 1.5;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--theme-accent) 22%, transparent);
 }
 
-.ts-comments-overview__stat-value i {
-  color: var(--theme-accent);
-  font-size: 16px;
+.ts-comments-overview__score-icon i {
+  color: var(--text-strong);
+  font-size: 15px;
   line-height: 1;
 }
 
-.ts-comments-overview__stat-label {
+.ts-comments-overview__score-value {
+  color: var(--text-strong);
+  font-size: 24px;
+  font-variation-settings: "wght" 750;
+  line-height: 1.4;
+}
+
+.ts-comments-overview__score-label {
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.6;
+}
+
+/* خط دوم کوچک منبع نظرات، زیر زیرعنوان. */
+.ts-comments-overview__reviews-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.ts-comments-overview__reviews-note i {
+  color: var(--theme-accent);
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* ---------------------------------------------------------------------------
@@ -441,37 +472,6 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-.ts-comments-overview__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-}
-
-.ts-comments-overview__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  background: var(--surface-raised);
-  color: var(--text-body);
-  font-size: 12px;
-  line-height: 1.9;
-}
-
-.ts-comments-overview__chip i {
-  font-size: 12px;
-  line-height: 1;
-}
-
-.ts-comments-overview__chip--stale {
-  border-color: color-mix(in srgb, var(--state-warning) 50%, transparent);
-  background: var(--state-warning-surface);
-  color: var(--state-warning);
-}
-
 .ts-comments-overview__disclosure {
   margin: 10px 0 0;
   color: var(--text-body);
@@ -494,20 +494,32 @@
   .ts-comments-overview__header {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 12px;
   }
 
   .ts-comments-overview__badge {
     align-self: flex-start;
   }
 
-  .ts-comments-overview__stat {
-    flex: 1 1 100%;
-    padding: 8px 12px;
+  /* کارت‌های امتیاز در موبایل هم کنار هم می‌مانند (دو عدد کلیدی صفحه‌اند). */
+  .ts-comments-overview__scores {
+    width: 100%;
   }
 
-  .ts-comments-overview__stat-value {
-    font-size: 16px;
+  .ts-comments-overview__score {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px 10px;
+    border-radius: 12px;
+  }
+
+  .ts-comments-overview__score-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ts-comments-overview__score-value {
+    font-size: 20px;
   }
 
   .ts-comments-overview__panels {
