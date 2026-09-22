@@ -166,26 +166,6 @@ final class TS_Comments_Overview_Render {
 	}
 
 	/**
-	 * برچسب تاریخ آخرین به‌روزرسانی تحلیل.
-	 *
-	 * @param int|null $timestamp زمان یونیکس.
-	 * @return string
-	 */
-	public static function updated_label( $timestamp ) {
-		if ( empty( $timestamp ) ) {
-			return '';
-		}
-
-		$format = function_exists( 'get_option' ) ? (string) get_option( 'date_format', 'Y/m/d' ) : 'Y/m/d';
-
-		if ( function_exists( 'wp_date' ) ) {
-			return (string) wp_date( $format, (int) $timestamp );
-		}
-
-		return (string) date_i18n( $format, (int) $timestamp );
-	}
-
-	/**
 	 * درصد گردشده برای نوار احساسات.
 	 *
 	 * @param int $part  شمارش یک حالت.

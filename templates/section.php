@@ -37,7 +37,6 @@ $ts_co_summary_html   = TS_Comments_Overview_Payload::format_text( isset( $data[
 $ts_co_topics         = isset( $data['topics'] ) && is_array( $data['topics'] ) ? $data['topics'] : array();
 $ts_co_strengths      = isset( $data['strengths'] ) && is_array( $data['strengths'] ) ? $data['strengths'] : array();
 $ts_co_weaknesses     = isset( $data['weaknesses'] ) && is_array( $data['weaknesses'] ) ? $data['weaknesses'] : array();
-$ts_co_updated        = TS_Comments_Overview_Render::updated_label( isset( $data['updated_at'] ) ? $data['updated_at'] : null );
 $ts_co_is_derived     = ! empty( $data['is_derived'] );
 $ts_co_stale          = ! empty( $data['stale'] );
 
@@ -65,9 +64,9 @@ $ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $t
 	<header class="ts-comments-overview__header">
 		<div class="ts-comments-overview__heading">
 			<h3 id="ts-comments-overview-title" class="ts-comments-overview__title">
-				آنچه کاربران درباره این محصول می‌گویند
+				آنچه کاربران در اینترنت درباره این محصول می‌گویند
 			</h3>
-			<p class="ts-comments-overview__subtitle">خلاصه‌ی خودکار نظرات کاربران در سایت‌های دیگر درباره‌ی این محصول.</p>
+			<p class="ts-comments-overview__subtitle">جمع‌بندی خودکار نظراتی که کاربران در سایت‌های دیگر ثبت کرده‌اند.</p>
 		</div>
 		<span class="ts-comments-overview__badge">
 			<i class="icon-chat" aria-hidden="true"></i>
@@ -177,6 +176,27 @@ $ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $t
 		</div>
 	<?php endif; ?>
 
+	<?php
+	/*
+	 * این هشدار عمداً پیش از متن خلاصه می‌آید (نه به‌عنوان پانویس کوچک در انتها)،
+	 * چون شکایت‌های مربوط به تجربه‌ی خرید در فروشگاه‌های دیگر — مثل بسته‌بندی
+	 * نامناسب یا دریافت کالای آسیب‌دیده — ممکن است در متن خلاصه بیاید. کاربر باید
+	 * پیش از خواندن آن‌ها بداند این نظرات از فروشگاه دیگری است.
+	 */
+	?>
+	<aside class="ts-comments-overview__notice" role="note">
+		<i class="icon-info ts-comments-overview__notice-icon" aria-hidden="true"></i>
+		<div class="ts-comments-overview__notice-body">
+			<p class="ts-comments-overview__notice-title">
+				این نظرات از سایت‌های اینترنتی دیگر جمع‌بندی شده است، نه از خریداران تهران‌اسپیکر.
+			</p>
+			<p class="ts-comments-overview__notice-text">
+				ایرادهایی مثل بسته‌بندی نامناسب، کالای آسیب‌دیده یا مرجوعی، و تجربه‌ی خرید، مربوط به همان فروشگاه‌هاست
+				و درباره‌ی خرید از تهران‌اسپیکر نیست.
+			</p>
+		</div>
+	</aside>
+
 	<?php if ( '' !== $ts_co_summary_html ) : ?>
 		<div class="ts-comments-overview__summary">
 			<?php echo wp_kses_post( $ts_co_summary_html ); ?>
@@ -251,24 +271,17 @@ $ts_co_sentiment_basis = ! empty( $ts_co_comments ) ? (int) $ts_co_comments : $t
 	<?php endif; ?>
 
 	<footer class="ts-comments-overview__footer">
-		<p class="ts-comments-overview__meta">
-			<?php if ( $ts_co_stale ) : ?>
+		<?php if ( $ts_co_stale ) : ?>
+			<p class="ts-comments-overview__meta">
 				<span class="ts-comments-overview__chip ts-comments-overview__chip--stale">
 					<i class="icon-history" aria-hidden="true"></i>
 					به‌روزرسانی در انتظار است
 				</span>
-			<?php endif; ?>
-
-			<?php if ( '' !== $ts_co_updated ) : ?>
-				<span class="ts-comments-overview__chip">
-					<i class="icon-clock" aria-hidden="true"></i>
-					آخرین به‌روزرسانی: <?php echo esc_html( $ts_co_updated ); ?>
-				</span>
-			<?php endif; ?>
-		</p>
+			</p>
+		<?php endif; ?>
 
 		<p class="ts-comments-overview__disclosure">
-			این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های دیگر ساخته شده است و نظر یا تأیید تهران‌اسپیکر نیست.
+			این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های اینترنتی دیگر ساخته شده است و نظر یا تأیید تهران‌اسپیکر نیست.
 		</p>
 	</footer>
 </section>

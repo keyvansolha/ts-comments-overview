@@ -224,6 +224,54 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * هشدار منبع نظرات
+ *
+ * عمداً برجسته است و پیش از متن خلاصه می‌آید: ممکن است خلاصه از بسته‌بندی نامناسب
+ * یا کالای آسیب‌دیده در فروشگاه‌های دیگر بگوید و کاربر باید پیش از خواندن آن
+ * بداند این نظرات از فروشگاه دیگری است.
+ * ------------------------------------------------------------------------ */
+
+.ts-comments-overview__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--state-info) 45%, transparent);
+  border-inline-start-width: 4px;
+  border-radius: 12px;
+  background: var(--state-info-surface);
+  color: var(--text-body);
+}
+
+.ts-comments-overview__notice-icon {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  color: var(--state-info);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.ts-comments-overview__notice-body {
+  min-width: 0;
+}
+
+.ts-comments-overview__notice-title {
+  margin: 0;
+  color: var(--state-info);
+  font-size: 13px;
+  font-variation-settings: "wght" 700;
+  line-height: 1.9;
+}
+
+.ts-comments-overview__notice-text {
+  margin: 4px 0 0;
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.95;
+}
+
+/* ---------------------------------------------------------------------------
  * خلاصه
  * ------------------------------------------------------------------------ */
 

@@ -31,7 +31,8 @@ $html = TS_Comments_Overview_Render::get_html( 4321 );
 ts_co_assert_true( '' !== $html, 'حالت خلاصه خروجی تولید می‌کند' );
 ts_co_assert_contains( '<section class="ts-comments-overview"', $html, 'بخش خلاصه با کلاس اختصاصی رندر می‌شود' );
 ts_co_assert_contains( 'dir="rtl"', $html, 'بخش خلاصه راست‌به‌چپ است' );
-ts_co_assert_contains( 'آنچه کاربران درباره این محصول می‌گویند', $html, 'عنوان بخش نمایش داده می‌شود' );
+ts_co_assert_contains( 'آنچه کاربران در اینترنت درباره این محصول می‌گویند', $html, 'عنوان بخش، اینترنتی بودن نظرات را روشن می‌کند' );
+ts_co_assert_contains( 'جمع‌بندی خودکار نظراتی که کاربران در سایت‌های دیگر ثبت کرده‌اند', $html, 'زیرعنوان منبع نظرات را توضیح می‌دهد' );
 ts_co_assert_contains( '<p>کیفیت صدا در کل رضایت‌بخش است.</p>', $html, 'خلاصه به پاراگراف تبدیل می‌شود' );
 ts_co_assert_contains( '<li>بیس عمیق و بدون اعوجاج</li>', $html, 'خطوط فهرستی خلاصه رندر می‌شوند' );
 ts_co_assert_contains( '<strong>عمر باتری</strong>', $html, 'پررنگ‌سازی خلاصه کار می‌کند' );
@@ -56,8 +57,19 @@ ts_co_assert_contains( 'ts-comments-overview__topic-label">کیفیت صدا<', 
 ts_co_assert_not_contains( 'بر پایه‌ی 2 منبع', $html, 'تعداد منابع نمایش داده نمی‌شود' );
 ts_co_assert_not_contains( 'دیجی‌کالا', $html, 'نام منبع در رابط کاربری نیست' );
 ts_co_assert_not_contains( 'ts-comments-overview__source', $html, 'هیچ عنصر منبعی در خروجی نیست' );
-ts_co_assert_contains( '2026-08-01', $html, 'تاریخ آخرین به‌روزرسانی (شمسی/میلادی بر پایه‌ی قالب سایت) نمایش داده می‌شود' );
-ts_co_assert_contains( 'این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های دیگر ساخته شده است', $html, 'سلب مسئولیت ذکر می‌شود' );
+ts_co_assert_not_contains( '2026-08-01', $html, 'تاریخ آخرین به‌روزرسانی در رابط کاربری نمایش داده نمی‌شود' );
+ts_co_assert_not_contains( 'آخرین به‌روزرسانی', $html, 'هیچ نشانه‌ای از زمان به‌روزرسانی در خروجی نیست' );
+ts_co_assert_contains( 'این خلاصه به‌صورت خودکار از مجموع نظرات کاربران در سایت‌های اینترنتی دیگر ساخته شده است', $html, 'سلب مسئولیت ذکر می‌شود' );
+
+// هشدار برجسته‌ی «این نظرات از فروشگاه دیگری است» باید پیش از متن خلاصه بیاید.
+ts_co_assert_contains( 'ts-comments-overview__notice', $html, 'هشدار منبع نظرات رندر می‌شود' );
+ts_co_assert_contains( 'این نظرات از سایت‌های اینترنتی دیگر جمع‌بندی شده است، نه از خریداران تهران‌اسپیکر', $html, 'هشدار، فروشگاه خودمان را از منبع نظرات جدا می‌کند' );
+ts_co_assert_contains( 'بسته‌بندی نامناسب، کالای آسیب‌دیده یا مرجوعی', $html, 'هشدار، ایرادهای مربوط به فروشگاه‌های دیگر را نام می‌برد' );
+ts_co_assert_contains( 'icon-info', $html, 'آیکون هشدار از مجموعه آیکون‌های قالب است' );
+ts_co_assert_true(
+	strpos( $html, 'ts-comments-overview__notice' ) < strpos( $html, 'ts-comments-overview__summary' ),
+	'هشدار پیش از متن خلاصه در خروجی قرار دارد'
+);
 ts_co_assert_not_contains( 'به‌روزرسانی در انتظار است', $html, 'برای داده‌ی تازه، هشدار کهنگی نمایش داده نمی‌شود' );
 
 // در حالت خلاصه، نقاط قوت و ضعف نباید نمایش داده شوند.
