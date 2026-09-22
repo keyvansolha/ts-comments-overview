@@ -3,7 +3,7 @@
  * Plugin Name:       TS Comments Overview
  * Plugin URI:        https://www.tehranspeaker.com/
  * Description:       نمایش خلاصه‌ی نظرات کاربران (تحلیل سرویس mytsapp.ir) در بخش نظرات صفحه محصول تهران‌اسپیکر، با حالت‌های خاموش/خلاصه/خلاصه + نقاط قوت و ضعف.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Author:            Keyvan Havestin
  * Text Domain:       ts-comments-overview
  * Domain Path:       /languages

@@ -8,6 +8,20 @@
 ts_co_reset_environment();
 $GLOBALS['ts_co_options'] = array();
 
+// نسخه از هدر خود افزونه خوانده می‌شود، نه از یک عدد دستی در کد.
+ts_co_assert_true(
+	1 === preg_match( '/^\d+\.\d+\.\d+$/', TS_COMMENTS_OVERVIEW_VERSION ),
+	'نسخه‌ی افزونه از هدر افزونه خوانده می‌شود: ' . TS_COMMENTS_OVERVIEW_VERSION
+);
+ts_co_assert_true(
+	'0.0.0' !== TS_COMMENTS_OVERVIEW_VERSION,
+	'هدر افزونه نسخه دارد (مقدار پیش‌فرض 0.0.0 استفاده نشده است)'
+);
+ts_co_assert_true(
+	defined( 'TS_COMMENTS_OVERVIEW_PATH' ) && defined( 'TS_COMMENTS_OVERVIEW_URL' ) && defined( 'TS_COMMENTS_OVERVIEW_BASENAME' ),
+	'مسیرها و نام پایه‌ی افزونه تعریف شده‌اند'
+);
+
 ts_co_assert_same(
 	TS_Comments_Overview_Settings::MODE_OFF,
 	TS_Comments_Overview_Settings::get_mode(),

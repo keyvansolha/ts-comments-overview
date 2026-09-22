@@ -23,6 +23,11 @@ ts_co_assert_same( TS_COMMENTS_OVERVIEW_API_TOKEN, $call['args']['headers']['X-A
 ts_co_assert_same( 'application/json', $call['args']['headers']['Accept'], 'هدر Accept صحیح است' );
 ts_co_assert_same( 0, $call['args']['redirection'], 'ریدایرکت دنبال نمی‌شود' );
 ts_co_assert_true( $call['args']['timeout'] > 0 && $call['args']['timeout'] <= 10, 'مهلت درخواست محدود است' );
+ts_co_assert_contains(
+	'TS-Comments-Overview/' . TS_COMMENTS_OVERVIEW_VERSION,
+	(string) $call['args']['user-agent'],
+	'نسخه‌ی افزونه در User-Agent درخواست می‌آید'
+);
 ts_co_assert_true( isset( $result['data']['summary'] ), 'داده‌ی نرمال‌شده در پاسخ کش‌شدنی برمی‌گردد' );
 
 // کش: درخواست دوم شبکه‌ای نمی‌خورد.

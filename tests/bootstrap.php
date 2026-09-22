@@ -99,13 +99,34 @@ function is_wp_error( $thing ) {
 // ---------------------------------------------------------------------------
 
 /**
+ * شبیه‌سازی get_file_data برای هدر افزونه.
+ *
+ * نسخه از هدر واقعی همان فایل خوانده می‌شود (نه یک عدد ثابت در تست) تا تست‌ها با
+ * بالا رفتن نسخه از هدر عقب نیفتند و مسیر «نسخه از هدر» واقعاً بررسی شود.
+ *
  * @param string   $file    فایل.
  * @param string[] $headers هدرها.
  * @param string   $context متن.
  * @return array<string,string>
  */
 function get_file_data( $file, $headers, $context = '' ) {
-	return array( 'version' => '0.1.0' );
+	$out = array();
+
+	foreach ( $headers as $key => $label ) {
+		$out[ $key ] = '';
+	}
+
+	if ( is_string( $file ) && is_readable( $file ) ) {
+		$contents = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		foreach ( $headers as $key => $label ) {
+			if ( preg_match( '/^[ 	\/*#@]*' . preg_quote( $label, '/' ) . ':\s*(.+)$/mi', $contents, $matches ) === 1 ) {
+				$out[ $key ] = trim( $matches[1] );
+			}
+		}
+	}
+
+	return $out;
 }
 
 /**
