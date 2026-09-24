@@ -46,6 +46,72 @@ $saved = TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overv
 ts_co_assert_same( TS_Comments_Overview_Settings::MODE_SUMMARY, $saved['mode'], 'ذخیره‌ی حالت خلاصه' );
 ts_co_assert_false( TS_Comments_Overview_Settings::shows_pros_cons(), 'حالت خلاصه، قوت/ضعف نشان نمی‌دهد' );
 
+// ---------------------------------------------------------------------------
+// آستانه‌ی کیفیت (min_recommend)
+// ---------------------------------------------------------------------------
+
+ts_co_assert_same(
+	TS_Comments_Overview_Settings::DEFAULT_MIN_RECOMMEND,
+	TS_Comments_Overview_Settings::min_recommend(),
+	'آستانه‌ی کیفیت پیش‌فرض ۵۰ درصد است'
+);
+ts_co_assert_true( TS_Comments_Overview_Settings::has_min_recommend(), 'آستانه‌ی پیش‌فرض فعال است' );
+
+$saved = TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 70,
+	)
+);
+ts_co_assert_same( 70, $saved['min_recommend'], 'آستانه‌ی معتبر ذخیره می‌شود' );
+ts_co_assert_same( 70, TS_Comments_Overview_Settings::min_recommend(), 'آستانه‌ی ذخیره‌شده خوانده می‌شود' );
+
+// ذخیره‌ی فقط حالت، آستانه را پاک نمی‌کند.
+TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_SUMMARY ) );
+ts_co_assert_same( 70, TS_Comments_Overview_Settings::min_recommend(), 'ذخیره‌ی حالت‌تنها آستانه را حفظ می‌کند' );
+
+// صفر یعنی قاعده خاموش.
+$saved = TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 0,
+	)
+);
+ts_co_assert_same( 0, $saved['min_recommend'], 'آستانه‌ی صفر پذیرفته می‌شود' );
+ts_co_assert_false( TS_Comments_Overview_Settings::has_min_recommend(), 'آستانه‌ی صفر قاعده را خاموش می‌کند' );
+
+// ارقام فارسی و فاصله‌های اضافی.
+$saved = TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => ' ۶۵ ',
+	)
+);
+ts_co_assert_same( 65, $saved['min_recommend'], 'آستانه با ارقام فارسی و فاصله ذخیره می‌شود' );
+
+// ورودی نامعتبر به پیش‌فرض برمی‌گردد و هرگز باعث پنهان شدن کل بخش نمی‌شود.
+foreach ( array( 'abc' => 'متن غیرعددی', -10 => 'عدد منفی', 400 => 'عدد بالاتر از ۱۰۰' ) as $bad => $label ) {
+	$saved = TS_Comments_Overview_Settings::save(
+		array(
+			'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+			'min_recommend' => $bad,
+		)
+	);
+
+	ts_co_assert_same(
+		TS_Comments_Overview_Settings::DEFAULT_MIN_RECOMMEND,
+		$saved['min_recommend'],
+		'آستانه‌ی نامعتبر (' . $label . ') به پیش‌فرض برمی‌گردد'
+	);
+}
+
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => TS_Comments_Overview_Settings::DEFAULT_MIN_RECOMMEND,
+	)
+);
+
 ts_co_assert_same( 3, count( TS_Comments_Overview_Settings::modes() ), 'فقط سه حالت مجاز وجود دارد' );
 ts_co_assert_true(
 	array_key_exists( TS_Comments_Overview_Settings::MODE_OFF, TS_Comments_Overview_Settings::modes() )
