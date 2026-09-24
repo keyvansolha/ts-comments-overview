@@ -201,9 +201,9 @@ do_action( 'wbs_product_comments_overview', $product );
   (`product-detail-ui.js`) انجام می‌شود و بدون جاوااسکریپت هم لینک معمولی
   کار می‌کند.
 - **مالکیت:** همه‌ی این‌ها کار قالب است — ورودی نوار، چیدمان چهارستونه‌ی
-  موبایل، کلاس `has-comments-summary` و استایل حلقه در
-  `lib/Product/assets/css/product-detail-ui.css`. این افزونه فقط یک پاسخ
-  بله/خیر می‌دهد:
+  موبایل، کلاس `has-comments-summary`، و استایل حلقه در مسیر SCSS قالب
+  (`lib/Product/assets/scss/_comments-ring.scss` → `scss/desktop|mobile/product.css`).
+  این افزونه فقط یک پاسخ بله/خیر می‌دهد:
 
   ```php
   function_exists( 'ts_comments_overview_shows_summary' ) && ts_comments_overview_shows_summary()
