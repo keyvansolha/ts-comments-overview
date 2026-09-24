@@ -376,8 +376,54 @@ ts_co_assert_true(
 );
 
 // ---------------------------------------------------------------------------
-// نشان‌گذاری ورودی «نظرات» (حاشیه‌ی رنگین‌کمانی)
+// پاسخ به قالب: آیا خلاصه‌ای برای نمایش هست؟ (ورودی «نظرات» را قالب نشان می‌کند)
 // ---------------------------------------------------------------------------
+
+TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_SUMMARY ) );
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_true(
+	ts_comments_overview_shows_summary( 4321 ),
+	'برای محصول بالای آستانه، قالب پاسخ مثبت می‌گیرد و ورودی نظرات را نشان می‌کند'
+);
+
+// آستانه‌ی کیفیت همان تصمیم را می‌گیرد: محصول ضعیف نشان‌گذاری نمی‌شود.
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 90,
+	)
+);
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_false(
+	ts_comments_overview_shows_summary( 4321 ),
+	'محصول زیر آستانه‌ی کیفیت نشان‌گذاری نمی‌شود'
+);
+
+// حالت خاموش: نه خروجی، نه نشان‌گذاری، نه درخواست.
+TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_OFF ) );
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_false( ts_comments_overview_shows_summary( 4321 ), 'در حالت خاموش نشان‌گذاری‌ای وجود ندارد' );
+ts_co_assert_same( 0, ts_co_http_call_count(), 'در حالت خاموش برای نشان‌گذاری هم درخواستی زده نمی‌شود' );
+
+// خطای سرویس: نشان‌گذاری نکن.
+TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_SUMMARY ) );
+ts_co_reset_environment();
+ts_co_set_http_response( 500, array( 'error' => 'boom' ) );
+ts_co_assert_false( ts_comments_overview_shows_summary( 4321 ), 'خطای سرویس نشان‌گذاری نمی‌کند' );
+
+// نشان‌گذاری نوار و نمایش خلاصه همیشه یک تصمیم‌اند.
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_same(
+	'' !== TS_Comments_Overview_Render::get_html( 4321 ),
+	ts_comments_overview_shows_summary( 4321 ),
+	'تصمیم نشان‌گذاری ورودی نظرات با نمایش خلاصه یکی است'
+);
+
+// ---- افزونه هیچ اسکریپت و هیچ استایل نوار تزریق نمی‌کند (همه در قالب است) ----
 
 TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_SUMMARY ) );
 ts_co_reset_environment();
@@ -386,26 +432,18 @@ TS_Comments_Overview_Render::enqueue_assets();
 $GLOBALS['ts_co_is_product'] = false;
 
 ts_co_assert_true(
-	isset( $GLOBALS['ts_co_scripts'][ TS_Comments_Overview_Render::SCRIPT_HANDLE ] ),
-	'در صفحه محصول، اسکریپت نشان‌گذاری نوار بخش‌ها بارگذاری می‌شود'
+	isset( $GLOBALS['ts_co_styles'][ TS_Comments_Overview_Render::STYLE_HANDLE ] ),
+	'در صفحه محصول، استایل بخش خلاصه بارگذاری می‌شود'
 );
-ts_co_assert_true(
-	! empty( $GLOBALS['ts_co_scripts'][ TS_Comments_Overview_Render::SCRIPT_HANDLE ]['footer'] ),
-	'اسکریپت در فوتر بارگذاری می‌شود تا DOM آماده باشد'
+ts_co_assert_false(
+	! empty( $GLOBALS['ts_co_scripts'] ),
+	'افزونه هیچ اسکریپتی تزریق نمی‌کند (رفتار نوار بخش‌ها در قالب است)'
 );
-
-$script_source = (string) file_get_contents( TS_COMMENTS_OVERVIEW_PATH . 'assets/js/comments-overview.js' );
-ts_co_assert_contains( 'productComments', $script_source, 'اسکریپت تب «نظرات» دسکتاپ را هدف می‌گیرد' );
-ts_co_assert_contains( 'comments"', $script_source, 'اسکریپت میان‌بر نظرات موبایل را هدف می‌گیرد' );
-ts_co_assert_contains( 'ts-co-nav-glow', $script_source, 'کلاس نشان‌گذاری در اسکریپت تعریف شده است' );
-ts_co_assert_contains( '.ts-comments-overview', $script_source, 'اسکریپت فقط با وجود بخش خلاصه فعال می‌شود' );
 
 $style_source = (string) file_get_contents( TS_COMMENTS_OVERVIEW_PATH . 'assets/css/comments-overview.css' );
-ts_co_assert_contains( '.ts-co-nav-glow', $style_source, 'استایل حلقه‌ی رنگین‌کمانی وجود دارد' );
-ts_co_assert_contains( 'ts-co-glow-rainbow', $style_source, 'انیمیشن رنگین‌کمانی تعریف شده است' );
-ts_co_assert_contains( 'prefers-reduced-motion', $style_source, 'حالت کم‌تحرکی برای حلقه رعایت شده است' );
-ts_co_assert_not_contains(
-	'.ts-co-nav-glow::before',
-	$style_source,
-	'حلقه از شبه‌عنصر استفاده نمی‌کند (قالب شبه‌عنصرهای تب را خاموش کرده است)'
+ts_co_assert_not_contains( 'has-comments-summary', $style_source, 'استایل حلقه در افزونه نیست؛ مال قالب است' );
+ts_co_assert_not_contains( 'conic-gradient', $style_source, 'افزونه هیچ گرادیان رنگین‌کمانی ندارد' );
+ts_co_assert_true(
+	! file_exists( TS_COMMENTS_OVERVIEW_PATH . 'assets/js/comments-overview.js' ),
+	'فایل اسکریپت افزونه حذف شده است'
 );

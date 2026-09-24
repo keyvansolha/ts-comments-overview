@@ -3,7 +3,7 @@
  * Plugin Name:       TS Comments Overview
  * Plugin URI:        https://www.tehranspeaker.com/
  * Description:       نمایش خلاصه‌ی نظرات کاربران (تحلیل سرویس mytsapp.ir) در بخش نظرات صفحه محصول تهران‌اسپیکر، با حالت‌های خاموش/خلاصه/خلاصه + نقاط قوت و ضعف، آستانه‌ی کیفیت برای پنهان کردن خلاصه‌ی محصول‌های ضعیف، و نشان‌گذاری ورودی «نظرات» در نوار بخش‌های صفحه.
- * Version:           0.4.0
+ * Version:           0.5.0
  * Author:            Keyvan Havestin
  * Text Domain:       ts-comments-overview
  * Domain Path:       /languages
@@ -16,14 +16,26 @@
  * ---------------------------------------------------------------------------
  * قرارداد با قالب Amazing
  * ---------------------------------------------------------------------------
- * قالب در دو فایل زیر، دقیقاً پیش از فهرست نظرات، هوک زیر را اجرا می‌کند:
+ * ۱) نمایش بخش خلاصه — قالب در دو فایل زیر، دقیقاً پیش از فهرست نظرات، هوک
+ *    زیر را اجرا می‌کند:
  *   - lib/Product/template/desktop/comments.php
  *   - lib/Product/template/mobile/panels/comments.php
  *
  *     do_action( 'wbs_product_comments_overview', $product );
  *
+ * ۲) نشان‌گذاری ورودی «نظرات» — قالب پیش از چاپ تب/لینک نظرات، این تابع را
+ *    می‌پرسد تا کلاس خودش (has-comments-summary) را بگذارد:
+ *
+ *     function_exists( 'ts_comments_overview_shows_summary' ) && ts_comments_overview_shows_summary()
+ *
+ *    استایل آن حلقه (حلقه‌ی رنگین‌کمانی) در خود قالب است، نه این افزونه؛
+ *    افزونه فقط می‌گوید برای این محصول خلاصه‌ای برای نمایش هست یا نه. چون
+ *    تصمیم از همان داده‌ی get_html می‌آید، نوار و بخش خلاصه هرگز ناهماهنگ
+ *    نمی‌شوند.
+ *
  * نام هوک با ثابت TS_COMMENTS_OVERVIEW_HOOK قابل بازنویسی از wp-config.php است.
- * اگر افزونه غیرفعال باشد، این هوک هیچ کاری نمی‌کند و قالب مثل قبل کار می‌کند.
+ * اگر افزونه غیرفعال باشد، نه این هوک کاری می‌کند و نه این تابع وجود دارد؛
+ * قالب مثل قبل کار می‌کند.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -127,6 +139,19 @@ function ts_comments_overview_activate() {
 	TS_Comments_Overview_Settings::ensure_defaults();
 }
 register_activation_hook( __FILE__, 'ts_comments_overview_activate' );
+
+/**
+ * آیا برای محصول جاری خلاصه‌ی نظرات نمایش داده می‌شود؟
+ *
+ * قالب این تابع را صدا می‌زند تا ورودی «نظرات» را نشان‌گذاری کند. همیشه با
+ * function_exists بررسی شود تا قالب بدون این افزونه هم کار کند.
+ *
+ * @param mixed $product محصول، شناسه‌ی محصول، یا null برای محصول جاری.
+ * @return bool
+ */
+function ts_comments_overview_shows_summary( $product = null ) {
+	return TS_Comments_Overview_Render::shows_summary( $product );
+}
 
 /**
  * پاک کردن کش تحلیل نظرات (ترنزینت‌ها) هنگام غیرفعال‌سازی.

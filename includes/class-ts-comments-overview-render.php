@@ -19,9 +19,6 @@ final class TS_Comments_Overview_Render {
 	/** هندل استایل بخش خلاصه. */
 	const STYLE_HANDLE = 'ts-comments-overview';
 
-	/** هندل اسکریپت نشان‌گذاری نوار بخش‌ها. */
-	const SCRIPT_HANDLE = 'ts-comments-overview-nav';
-
 	/**
 	 * ثبت هوک‌ها.
 	 *
@@ -59,26 +56,6 @@ final class TS_Comments_Overview_Render {
 			TS_COMMENTS_OVERVIEW_URL . 'assets/css/comments-overview.css',
 			$dependencies,
 			$version
-		);
-
-		/*
-		 * نشان‌گذاری ورودی «نظرات» در نوار بخش‌های صفحه محصول.
-		 *
-		 * اگر قالب این اسکریپت را لازم نداشته باشد، فایل وجود ندارد و هیچ
-		 * درخواستی به سرور اضافه نمی‌شود.
-		 */
-		$script_path = TS_COMMENTS_OVERVIEW_PATH . 'assets/js/comments-overview.js';
-
-		if ( ! file_exists( $script_path ) ) {
-			return;
-		}
-
-		wp_enqueue_script(
-			self::SCRIPT_HANDLE,
-			TS_COMMENTS_OVERVIEW_URL . 'assets/js/comments-overview.js',
-			array(),
-			(string) filemtime( $script_path ),
-			true
 		);
 	}
 
@@ -126,21 +103,69 @@ final class TS_Comments_Overview_Render {
 			return '';
 		}
 
+		$data = self::analysis_for( $product_id, $force );
+
+		if ( null === $data || ! self::passes_quality_threshold( $data ) ) {
+			return '';
+		}
+
+		return self::render_template( $data );
+	}
+
+	/**
+	 * آیا برای این محصول خلاصه‌ای برای نمایش وجود دارد؟
+	 *
+	 * همان تصمیم get_html است، بدون ساخت HTML: روشن و پیکربندی‌شده، سرویس
+	 * داده داشته باشد، و محصول زیر آستانه‌ی کیفیت نباشد. قالب این را می‌پرسد تا
+	 * ورودی «نظرات» را نشان‌گذاری کند (حلقه‌ی رنگین‌کمانی)، بنابراین تصمیم
+	 * نمایش خلاصه و نشان‌گذاری نوار همیشه یکی است.
+	 *
+	 * @param mixed $product محصول، شناسه‌ی محصول، یا null برای محصول جاری.
+	 * @return bool
+	 */
+	public static function shows_summary( $product = null ) {
+		if ( ! self::should_render() ) {
+			return false;
+		}
+
+		$product_id = self::resolve_product_id( $product );
+
+		if ( $product_id <= 0 ) {
+			return false;
+		}
+
+		$data = self::analysis_for( $product_id );
+
+		if ( null === $data ) {
+			return false;
+		}
+
+		return self::passes_quality_threshold( $data );
+	}
+
+	/**
+	 * گرفتن داده‌ی نرمال‌شده‌ی سرویس برای یک محصول.
+	 *
+	 * @param int  $product_id شناسه‌ی محصول.
+	 * @param bool $force      نادیده گرفتن کش (ابزار پیشخوان).
+	 * @return array<string,mixed>|null
+	 */
+	private static function analysis_for( $product_id, $force = false ) {
+		$product_id = (int) $product_id;
+
+		if ( $product_id <= 0 ) {
+			return null;
+		}
+
 		$analysis = $force
 			? TS_Comments_Overview_API::get_live( $product_id )
 			: TS_Comments_Overview_API::get( $product_id );
 
 		if ( is_wp_error( $analysis ) || ! isset( $analysis['data'] ) || ! is_array( $analysis['data'] ) ) {
-			return '';
+			return null;
 		}
 
-		// آستانه‌ی کیفیت: برای محصولی که کاربران از آن راضی نیستند، خلاصه‌ی
-		// منفی به کاربر نشان داده نمی‌شود و بخش نظرات مثل قبل می‌ماند.
-		if ( ! self::passes_quality_threshold( $analysis['data'] ) ) {
-			return '';
-		}
-
-		return self::render_template( $analysis['data'] );
+		return $analysis['data'];
 	}
 
 	/**
