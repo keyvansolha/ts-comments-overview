@@ -7,6 +7,11 @@
  *   - summary           : فقط خلاصه‌ی نظرات.
  *   - summary_pros_cons : خلاصه + نقاط قوت و ضعف.
  *
+ * آستانه‌ی کیفیت (min_recommend):
+ *   اگر درصد پیشنهاد محصول از این عدد کمتر باشد، بخش خلاصه اصلاً نمایش داده
+ *   نمی‌شود؛ تا برای محصولی که کاربران از آن راضی نیستند، جمع‌بندی منفی به
+ *   کاربر نشان داده نشود. مقدار ۰ یعنی این قاعده خاموش است.
+ *
  * @package TS_Comments_Overview
  */
 
@@ -21,12 +26,18 @@ final class TS_Comments_Overview_Settings {
 	const OPTION = 'ts_comments_overview_settings';
 
 	/** نسخه‌ی ساختار تنظیمات. */
-	const SCHEMA_VERSION = 1;
+	const SCHEMA_VERSION = 2;
 
 	/** حالت‌های مجاز نمایش. */
 	const MODE_OFF              = 'off';
 	const MODE_SUMMARY          = 'summary';
 	const MODE_SUMMARY_PROS_CONS = 'summary_pros_cons';
+
+	/** حداقل درصد پیشنهاد برای نمایش خلاصه (پیش‌فرض). */
+	const DEFAULT_MIN_RECOMMEND = 50;
+
+	/** سقف مجاز آستانه‌ی کیفیت. */
+	const MAX_MIN_RECOMMEND = 100;
 
 	/**
 	 * حالت پیش‌فرض: خاموش.
@@ -37,6 +48,7 @@ final class TS_Comments_Overview_Settings {
 		return array(
 			'schema_version' => self::SCHEMA_VERSION,
 			'mode'           => self::MODE_OFF,
+			'min_recommend'  => self::DEFAULT_MIN_RECOMMEND,
 		);
 	}
 
@@ -113,7 +125,68 @@ final class TS_Comments_Overview_Settings {
 		return array(
 			'schema_version' => self::SCHEMA_VERSION,
 			'mode'           => $mode,
+			'min_recommend'  => self::sanitize_min_recommend( $raw ),
 		);
+	}
+
+	/**
+	 * پاک‌سازی آستانه‌ی کیفیت.
+	 *
+	 * هر مقدار نامعتبر (خالی، غیرعددی، خارج از بازه) به پیش‌فرض برمی‌گردد تا
+	 * یک ورودی ناخواسته باعث پنهان شدن کل بخش در سایت نشود.
+	 *
+	 * @param array<string,mixed> $raw ورودی خام.
+	 * @return int
+	 */
+	private static function sanitize_min_recommend( array $raw ) {
+		if ( ! array_key_exists( 'min_recommend', $raw ) ) {
+			// درخواست‌هایی که فقط حالت را ذخیره می‌کنند، آستانه را پاک نکنند.
+			return self::stored_min_recommend();
+		}
+
+		$value = $raw['min_recommend'];
+
+		if ( is_string( $value ) ) {
+			// ارقام فارسی/عربی و فاصله‌های اضافی هم پذیرفته شوند.
+			$value = str_replace(
+				array( '۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹', '٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩' ),
+				array( '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ),
+				trim( $value )
+			);
+		}
+
+		if ( ! is_numeric( $value ) ) {
+			return self::DEFAULT_MIN_RECOMMEND;
+		}
+
+		$percent = (int) round( (float) $value );
+
+		if ( $percent < 0 || $percent > self::MAX_MIN_RECOMMEND ) {
+			return self::DEFAULT_MIN_RECOMMEND;
+		}
+
+		return $percent;
+	}
+
+	/**
+	 * آستانه‌ی ذخیره‌شده‌ی فعلی (برای ذخیره‌های جزئی).
+	 *
+	 * @return int
+	 */
+	private static function stored_min_recommend() {
+		$stored = get_option( self::OPTION, null );
+
+		if ( ! is_array( $stored ) || ! array_key_exists( 'min_recommend', $stored ) || ! is_numeric( $stored['min_recommend'] ) ) {
+			return self::DEFAULT_MIN_RECOMMEND;
+		}
+
+		$value = (int) round( (float) $stored['min_recommend'] );
+
+		if ( $value < 0 || $value > self::MAX_MIN_RECOMMEND ) {
+			return self::DEFAULT_MIN_RECOMMEND;
+		}
+
+		return $value;
 	}
 
 	/**
@@ -175,6 +248,31 @@ final class TS_Comments_Overview_Settings {
 	 */
 	public static function shows_pros_cons() {
 		return self::MODE_SUMMARY_PROS_CONS === self::get_mode();
+	}
+
+	/**
+	 * آستانه‌ی کیفیت: حداقل درصد پیشنهاد برای نمایش خلاصه.
+	 *
+	 * @return int عددی بین ۰ تا ۱۰۰؛ ۰ یعنی قاعده خاموش است.
+	 */
+	public static function min_recommend() {
+		$settings = self::get_all();
+		$value    = isset( $settings['min_recommend'] ) ? (int) $settings['min_recommend'] : self::DEFAULT_MIN_RECOMMEND;
+
+		if ( $value < 0 || $value > self::MAX_MIN_RECOMMEND ) {
+			return self::DEFAULT_MIN_RECOMMEND;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * آیا قاعده‌ی آستانه‌ی کیفیت فعال است؟
+	 *
+	 * @return bool
+	 */
+	public static function has_min_recommend() {
+		return self::min_recommend() > 0;
 	}
 
 	/**

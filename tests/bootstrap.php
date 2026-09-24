@@ -634,6 +634,32 @@ function wp_enqueue_style( $handle, $src = '', $deps = array(), $ver = false ) {
 }
 
 /**
+ * @param string $hook  نام.
+ * @param string $list  فهرست.
+ * @return bool
+ */
+function wp_script_is( $hook, $list = 'enqueued' ) {
+	return isset( $GLOBALS['ts_co_scripts'][ $hook ] );
+}
+
+/**
+ * @param string $handle    هندل.
+ * @param string $src       نشانی.
+ * @param array  $deps      وابستگی‌ها.
+ * @param string $ver       نسخه.
+ * @param bool   $in_footer در فوتر.
+ * @return void
+ */
+function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $in_footer = false ) {
+	$GLOBALS['ts_co_scripts'][ $handle ] = array(
+		'src'    => $src,
+		'deps'   => $deps,
+		'ver'    => $ver,
+		'footer' => $in_footer,
+	);
+}
+
+/**
  * @return bool
  */
 function is_admin() {
@@ -821,6 +847,7 @@ function ts_co_reset_environment() {
 	$GLOBALS['ts_co_http_calls']   = array();
 	$GLOBALS['ts_co_transients']   = array();
 	$GLOBALS['ts_co_styles']       = array();
+	$GLOBALS['ts_co_scripts']      = array();
 	$GLOBALS['ts_co_http_handler'] = null;
 
 	// ایندکس کش هم بخشی از زیرساخت محیط تست است، نه تنظیمات افزونه.

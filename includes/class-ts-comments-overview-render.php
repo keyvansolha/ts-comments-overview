@@ -19,6 +19,9 @@ final class TS_Comments_Overview_Render {
 	/** هندل استایل بخش خلاصه. */
 	const STYLE_HANDLE = 'ts-comments-overview';
 
+	/** هندل اسکریپت نشان‌گذاری نوار بخش‌ها. */
+	const SCRIPT_HANDLE = 'ts-comments-overview-nav';
+
 	/**
 	 * ثبت هوک‌ها.
 	 *
@@ -56,6 +59,26 @@ final class TS_Comments_Overview_Render {
 			TS_COMMENTS_OVERVIEW_URL . 'assets/css/comments-overview.css',
 			$dependencies,
 			$version
+		);
+
+		/*
+		 * نشان‌گذاری ورودی «نظرات» در نوار بخش‌های صفحه محصول.
+		 *
+		 * اگر قالب این اسکریپت را لازم نداشته باشد، فایل وجود ندارد و هیچ
+		 * درخواستی به سرور اضافه نمی‌شود.
+		 */
+		$script_path = TS_COMMENTS_OVERVIEW_PATH . 'assets/js/comments-overview.js';
+
+		if ( ! file_exists( $script_path ) ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			self::SCRIPT_HANDLE,
+			TS_COMMENTS_OVERVIEW_URL . 'assets/js/comments-overview.js',
+			array(),
+			(string) filemtime( $script_path ),
+			true
 		);
 	}
 
@@ -111,7 +134,95 @@ final class TS_Comments_Overview_Render {
 			return '';
 		}
 
+		// آستانه‌ی کیفیت: برای محصولی که کاربران از آن راضی نیستند، خلاصه‌ی
+		// منفی به کاربر نشان داده نمی‌شود و بخش نظرات مثل قبل می‌ماند.
+		if ( ! self::passes_quality_threshold( $analysis['data'] ) ) {
+			return '';
+		}
+
 		return self::render_template( $analysis['data'] );
+	}
+
+	/**
+	 * درصدی که مبنای آستانه‌ی کیفیت است.
+	 *
+	 * اول درصد پیشنهاد سرویس (همان عددی که در کارت بالای خلاصه به کاربر
+	 * نشان می‌دهیم) و اگر سرویس آن را نداده بود، سهم نظرهای مثبت از مجموع
+	 * احساسات.
+	 *
+	 * @param array<string,mixed> $data داده‌ی نرمال‌شده‌ی سرویس.
+	 * @return int|null عدد ۰ تا ۱۰۰ یا null وقتی هیچ مبنایی وجود ندارد.
+	 */
+	public static function quality_percent( array $data ) {
+		$recommend = isset( $data['recommend_percentage'] ) ? $data['recommend_percentage'] : null;
+
+		if ( is_numeric( $recommend ) ) {
+			return self::clamp_percent( (float) $recommend );
+		}
+
+		$sentiment = isset( $data['sentiment'] ) && is_array( $data['sentiment'] ) ? $data['sentiment'] : array();
+		$positive  = isset( $sentiment['positive'] ) && is_numeric( $sentiment['positive'] ) ? (int) $sentiment['positive'] : null;
+
+		if ( null === $positive ) {
+			return null;
+		}
+
+		$total = 0;
+
+		foreach ( array( 'positive', 'negative', 'neutral' ) as $key ) {
+			if ( isset( $sentiment[ $key ] ) && is_numeric( $sentiment[ $key ] ) ) {
+				$total += (int) $sentiment[ $key ];
+			}
+		}
+
+		if ( $total <= 0 ) {
+			return null;
+		}
+
+		return self::clamp_percent( ( $positive / $total ) * 100 );
+	}
+
+	/**
+	 * آیا داده از آستانه‌ی کیفیت رد می‌شود؟
+	 *
+	 * اگر آستانه خاموش باشد (۰) یا سرویس هیچ عددی برای تصمیم نداده باشد،
+	 * بخش خلاصه نمایش داده می‌شود؛ پنهان کردن پیش‌فرض نیست.
+	 *
+	 * @param array<string,mixed> $data داده‌ی نرمال‌شده‌ی سرویس.
+	 * @return bool
+	 */
+	public static function passes_quality_threshold( array $data ) {
+		if ( ! TS_Comments_Overview_Settings::has_min_recommend() ) {
+			return true;
+		}
+
+		$percent = self::quality_percent( $data );
+
+		if ( null === $percent ) {
+			return true;
+		}
+
+		return $percent >= TS_Comments_Overview_Settings::min_recommend();
+	}
+
+	/**
+	 * محدود کردن درصد به بازه‌ی ۰ تا ۱۰۰.
+	 *
+	 * @param float $value عدد خام.
+	 * @return int
+	 */
+	private static function clamp_percent( $value ) {
+		$percent = (int) round( (float) $value );
+
+		if ( $percent < 0 ) {
+			return 0;
+		}
+
+		if ( $percent > 100 ) {
+			return 100;
+		}
+
+		return $percent;
 	}
 
 	/**

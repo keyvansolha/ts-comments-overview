@@ -76,3 +76,80 @@ ts_co_assert_contains( 'options-general.php?page=ts-comments-overview', $links[0
 $integration = TS_Comments_Overview_Admin::theme_integration_status();
 ts_co_assert_true( $integration['integrated'], 'افزونه یکپارچگی خود با قالب فعال را تشخیص می‌دهد' );
 ts_co_assert_same( 2, count( $integration['checked'] ), 'هر دو نقطه‌ی نمایش (دسکتاپ و موبایل) بررسی می‌شوند' );
+
+// ---------------------------------------------------------------------------
+// تنظیم آستانه‌ی کیفیت در پیشخوان
+// ---------------------------------------------------------------------------
+
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 65,
+	)
+);
+
+ob_start();
+TS_Comments_Overview_Admin::render_page();
+$page = (string) ob_get_clean();
+
+ts_co_assert_contains(
+	'ts_comments_overview_settings[min_recommend]',
+	$page,
+	'فیلد آستانه‌ی کیفیت در فرم تنظیمات هست'
+);
+ts_co_assert_contains( 'آستانه‌ی کیفیت', $page, 'بخش آستانه‌ی کیفیت عنوان دارد' );
+ts_co_assert_contains( 'value="65"', $page, 'آستانه‌ی ذخیره‌شده در فیلد نمایش داده می‌شود' );
+ts_co_assert_contains( 'type="number"', $page, 'آستانه با ورودی عددی گرفته می‌شود' );
+ts_co_assert_contains( 'min="0"', $page, 'کمینه‌ی آستانه صفر است' );
+ts_co_assert_contains( 'max="100"', $page, 'بیشینه‌ی آستانه ۱۰۰ است' );
+ts_co_assert_contains( 'ذخیره‌ی تنظیمات', $page, 'دکمه‌ی ذخیره‌ی تنظیمات وجود دارد' );
+
+// ---------------------------------------------------------------------------
+// گزارش آستانه در بررسی زنده
+// ---------------------------------------------------------------------------
+
+$GLOBALS['ts_co_transients'] = array();
+set_transient(
+	TS_Comments_Overview_Admin::TEST_TRANSIENT . get_current_user_id(),
+	array(
+		'ok'        => true,
+		'productId' => 238607,
+		'data'      => array( 'recommend_percentage' => 32 ),
+		'raw'       => array(),
+		'threshold' => array(
+			'percent'    => 32,
+			'min'        => 65,
+			'active'     => true,
+			'suppressed' => true,
+		),
+	),
+	300
+);
+
+ob_start();
+TS_Comments_Overview_Admin::render_page();
+$page = (string) ob_get_clean();
+ts_co_assert_contains( 'نمایش داده نمی‌شود', $page, 'بررسی زنده می‌گوید خلاصه به‌خاطر آستانه پنهان شده است' );
+ts_co_assert_contains( '32', $page, 'درصد واقعی محصول در گزارش بررسی زنده می‌آید' );
+
+set_transient(
+	TS_Comments_Overview_Admin::TEST_TRANSIENT . get_current_user_id(),
+	array(
+		'ok'        => true,
+		'productId' => 238607,
+		'data'      => array( 'recommend_percentage' => 85 ),
+		'raw'       => array(),
+		'threshold' => array(
+			'percent'    => 85,
+			'min'        => 65,
+			'active'     => true,
+			'suppressed' => false,
+		),
+	),
+	300
+);
+
+ob_start();
+TS_Comments_Overview_Admin::render_page();
+$page = (string) ob_get_clean();
+ts_co_assert_contains( 'خلاصه نمایش داده می‌شود', $page, 'بررسی زنده برای محصول بالای آستانه، نمایش را تأیید می‌کند' );

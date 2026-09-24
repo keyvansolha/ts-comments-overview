@@ -131,11 +131,21 @@ final class TS_Comments_Overview_Admin {
 				'productId' => $product_id,
 			);
 		} else {
+			$percent   = TS_Comments_Overview_Render::quality_percent( $result['data'] );
+			$min       = TS_Comments_Overview_Settings::min_recommend();
+			$is_active = TS_Comments_Overview_Settings::has_min_recommend();
+
 			$payload = array(
 				'ok'        => true,
 				'productId' => $product_id,
 				'data'      => $result['data'],
 				'raw'       => isset( $result['raw'] ) ? $result['raw'] : array(),
+				'threshold' => array(
+					'percent'    => $percent,
+					'min'        => $min,
+					'active'     => $is_active,
+					'suppressed' => $is_active && null !== $percent && $percent < $min,
+				),
 			);
 		}
 
@@ -294,7 +304,39 @@ final class TS_Comments_Overview_Admin {
 						</tr>
 					</tbody>
 				</table>
-				<?php submit_button( 'ذخیره‌ی حالت نمایش' ); ?>
+
+				<h2>آستانه‌ی کیفیت</h2>
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label for="ts-co-min-recommend">حداقل درصد پیشنهاد</label>
+							</th>
+							<td>
+								<input
+									type="number"
+									id="ts-co-min-recommend"
+									name="<?php echo esc_attr( TS_Comments_Overview_Settings::OPTION ); ?>[min_recommend]"
+									value="<?php echo esc_attr( (string) TS_Comments_Overview_Settings::min_recommend() ); ?>"
+									min="0"
+									max="<?php echo esc_attr( (string) TS_Comments_Overview_Settings::MAX_MIN_RECOMMEND ); ?>"
+									step="1"
+									class="small-text"
+								/>
+								<p class="description">
+									اگر درصد «پیشنهاد می‌کنند» محصول از این عدد کمتر باشد، بخش خلاصه در صفحه‌ی آن محصول
+									نمایش داده نمی‌شود و بخش نظرات مثل قبل می‌ماند؛ تا جمع‌بندی منفی روی محصولی که
+									کاربران از آن راضی نیستند به کاربر نشان داده نشود.<br />
+									مبنا اول درصد پیشنهاد سرویس است و اگر سرویس آن را نداده باشد، سهم نظرهای مثبت از مجموع
+									احساسات. عدد <code>0</code> این قاعده را خاموش می‌کند و خلاصه برای همه‌ی محصولات نمایش
+									داده می‌شود.
+								</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<?php submit_button( 'ذخیره‌ی تنظیمات' ); ?>
 			</form>
 
 			<h2>اتصال به سرویس</h2>
@@ -402,6 +444,29 @@ final class TS_Comments_Overview_Admin {
 							<?php endforeach; ?>
 						</tbody>
 					</table>
+					<?php
+					$threshold = isset( $last_test['threshold'] ) && is_array( $last_test['threshold'] ) ? $last_test['threshold'] : array();
+					$t_percent = isset( $threshold['percent'] ) && null !== $threshold['percent'] ? (string) $threshold['percent'] : '—';
+					?>
+					<?php if ( empty( $threshold ) ) : ?>
+						<p class="description">آستانه‌ی کیفیت در این بررسی محاسبه نشد.</p>
+					<?php elseif ( ! empty( $threshold['suppressed'] ) ) : ?>
+						<p style="color:#b32d2e">
+							<strong>با تنظیمات فعلی، خلاصه‌ی این محصول در سایت نمایش داده نمی‌شود:</strong>
+							درصد پیشنهاد <?php echo esc_html( $t_percent ); ?>٪ از آستانه‌ی کیفیت
+							<?php echo esc_html( (string) $threshold['min'] ); ?>٪ کمتر است.
+						</p>
+					<?php elseif ( ! empty( $threshold['active'] ) ) : ?>
+						<p>
+							درصد پیشنهاد این محصول <?php echo esc_html( $t_percent ); ?>٪ است و از آستانه‌ی
+							<?php echo esc_html( (string) $threshold['min'] ); ?>٪ رد می‌شود؛ بنابراین خلاصه نمایش داده می‌شود.
+						</p>
+					<?php else : ?>
+						<p>
+							آستانه‌ی کیفیت خاموش است (<code>0</code>)؛ خلاصه برای همه‌ی محصولات نمایش داده می‌شود.
+							درصد پیشنهاد این محصول: <?php echo esc_html( $t_percent ); ?>٪
+						</p>
+					<?php endif; ?>
 					<details style="margin-top:12px">
 						<summary>پاسخ خام سرویس</summary>
 						<pre style="max-height:360px;overflow:auto;background:#fff;border:1px solid #ccd0d4;padding:12px"><?php echo esc_html( wp_json_encode( isset( $last_test['raw'] ) ? $last_test['raw'] : array(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ); ?></pre>

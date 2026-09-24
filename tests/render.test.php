@@ -276,3 +276,136 @@ $desktop = TS_CO_TEST_THEME_DIR . '/lib/Product/template/desktop/comments.php';
 $mobile  = TS_CO_TEST_THEME_DIR . '/lib/Product/template/mobile/panels/comments.php';
 ts_co_assert_same( 'hook', $integration['checked'][ $desktop ], 'قالب دسکتاپ هوک را صدا می‌زند' );
 ts_co_assert_same( 'hook', $integration['checked'][ $mobile ], 'قالب موبایل هوک را صدا می‌زند' );
+
+// ---------------------------------------------------------------------------
+// آستانه‌ی کیفیت: مبنای درصد
+// ---------------------------------------------------------------------------
+
+ts_co_assert_same(
+	78,
+	TS_Comments_Overview_Render::quality_percent( array( 'recommend_percentage' => 78 ) ),
+	'مبنای آستانه، درصد پیشنهاد سرویس است'
+);
+ts_co_assert_same(
+	100,
+	TS_Comments_Overview_Render::quality_percent( array( 'recommend_percentage' => 130 ) ),
+	'درصد بیشتر از ۱۰۰ به ۱۰۰ محدود می‌شود'
+);
+ts_co_assert_same(
+	0,
+	TS_Comments_Overview_Render::quality_percent( array( 'recommend_percentage' => -5 ) ),
+	'درصد منفی به صفر محدود می‌شود'
+);
+ts_co_assert_same(
+	80,
+	TS_Comments_Overview_Render::quality_percent(
+		array( 'sentiment' => array( 'positive' => 80, 'negative' => 10, 'neutral' => 10 ) )
+	),
+	'اگر درصد پیشنهاد نبود، سهم نظرهای مثبت مبنا می‌شود'
+);
+ts_co_assert_same(
+	null,
+	TS_Comments_Overview_Render::quality_percent( array() ),
+	'بدون هیچ عددی مبنایی برای آستانه وجود ندارد'
+);
+ts_co_assert_same(
+	null,
+	TS_Comments_Overview_Render::quality_percent(
+		array( 'sentiment' => array( 'positive' => 0, 'negative' => 0, 'neutral' => 0 ) )
+	),
+	'احساسات صفر مبنای آستانه نمی‌شود'
+);
+
+// ---------------------------------------------------------------------------
+// آستانه‌ی کیفیت: تصمیم نمایش
+// ---------------------------------------------------------------------------
+
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 80,
+	)
+);
+ts_co_assert_true(
+	TS_Comments_Overview_Render::passes_quality_threshold( array( 'recommend_percentage' => 80 ) ),
+	'مرز آستانه: درصد مساوی، خلاصه نمایش داده می‌شود'
+);
+ts_co_assert_false(
+	TS_Comments_Overview_Render::passes_quality_threshold( array( 'recommend_percentage' => 79 ) ),
+	'درصد کمتر از آستانه، خلاصه را پنهان می‌کند'
+);
+ts_co_assert_true(
+	TS_Comments_Overview_Render::passes_quality_threshold( array() ),
+	'وقتی سرویس عددی نداده، پیش‌فرض نمایش است (پنهان کردن تهاجمی نیست)'
+);
+
+// خروجی واقعی: fixture سرویس ۷۸٪ دارد.
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_same(
+	'',
+	TS_Comments_Overview_Render::get_html( 4321 ),
+	'محصول زیر آستانه هیچ بخشی در صفحه تولید نمی‌کند'
+);
+
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 70,
+	)
+);
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_true(
+	'' !== TS_Comments_Overview_Render::get_html( 4321 ),
+	'محصول بالای آستانه خلاصه را نمایش می‌دهد'
+);
+
+// صفر = قاعده خاموش.
+TS_Comments_Overview_Settings::save(
+	array(
+		'mode'          => TS_Comments_Overview_Settings::MODE_SUMMARY,
+		'min_recommend' => 0,
+	)
+);
+ts_co_reset_environment();
+ts_co_set_http_response( 200, ts_co_fixture_payload() );
+ts_co_assert_true(
+	'' !== TS_Comments_Overview_Render::get_html( 4321 ),
+	'آستانه‌ی صفر همه‌ی محصولات را نمایش می‌دهد'
+);
+
+// ---------------------------------------------------------------------------
+// نشان‌گذاری ورودی «نظرات» (حاشیه‌ی رنگین‌کمانی)
+// ---------------------------------------------------------------------------
+
+TS_Comments_Overview_Settings::save( array( 'mode' => TS_Comments_Overview_Settings::MODE_SUMMARY ) );
+ts_co_reset_environment();
+$GLOBALS['ts_co_is_product'] = true;
+TS_Comments_Overview_Render::enqueue_assets();
+$GLOBALS['ts_co_is_product'] = false;
+
+ts_co_assert_true(
+	isset( $GLOBALS['ts_co_scripts'][ TS_Comments_Overview_Render::SCRIPT_HANDLE ] ),
+	'در صفحه محصول، اسکریپت نشان‌گذاری نوار بخش‌ها بارگذاری می‌شود'
+);
+ts_co_assert_true(
+	! empty( $GLOBALS['ts_co_scripts'][ TS_Comments_Overview_Render::SCRIPT_HANDLE ]['footer'] ),
+	'اسکریپت در فوتر بارگذاری می‌شود تا DOM آماده باشد'
+);
+
+$script_source = (string) file_get_contents( TS_COMMENTS_OVERVIEW_PATH . 'assets/js/comments-overview.js' );
+ts_co_assert_contains( 'productComments', $script_source, 'اسکریپت تب «نظرات» دسکتاپ را هدف می‌گیرد' );
+ts_co_assert_contains( 'comments"', $script_source, 'اسکریپت میان‌بر نظرات موبایل را هدف می‌گیرد' );
+ts_co_assert_contains( 'ts-co-nav-glow', $script_source, 'کلاس نشان‌گذاری در اسکریپت تعریف شده است' );
+ts_co_assert_contains( '.ts-comments-overview', $script_source, 'اسکریپت فقط با وجود بخش خلاصه فعال می‌شود' );
+
+$style_source = (string) file_get_contents( TS_COMMENTS_OVERVIEW_PATH . 'assets/css/comments-overview.css' );
+ts_co_assert_contains( '.ts-co-nav-glow', $style_source, 'استایل حلقه‌ی رنگین‌کمانی وجود دارد' );
+ts_co_assert_contains( 'ts-co-glow-rainbow', $style_source, 'انیمیشن رنگین‌کمانی تعریف شده است' );
+ts_co_assert_contains( 'prefers-reduced-motion', $style_source, 'حالت کم‌تحرکی برای حلقه رعایت شده است' );
+ts_co_assert_not_contains(
+	'.ts-co-nav-glow::before',
+	$style_source,
+	'حلقه از شبه‌عنصر استفاده نمی‌کند (قالب شبه‌عنصرهای تب را خاموش کرده است)'
+);

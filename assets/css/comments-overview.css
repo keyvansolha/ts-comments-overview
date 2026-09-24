@@ -536,3 +536,108 @@
     transition: none;
   }
 }
+
+/* ts-co:rainbow-ring:start
+ * ---------------------------------------------------------------------------
+ * حاشیه‌ی رنگین‌کمانی ورودی «نظرات» در نوار بخش‌های صفحه محصول
+ *
+ * وقتی برای محصول خلاصه‌ی نظرات وجود دارد، ورودی «نظرات» (تب دسکتاپ یا
+ * میان‌بر موبایل) یک حلقه‌ی رنگین‌کمانی متحرک می‌گیرد تا کاربر بفهمد پشت آن
+ * چیز تازه‌ای هست. کلاس ts-co-nav-glow را اسکریپت افزونه اضافه می‌کند و فقط
+ * زمانی می‌نشیند که بخش خلاصه واقعاً در صفحه رندر شده باشد.
+ *
+ * چرا outline و نه ::before/::after؟
+ *   قالب در product-detail-ui.css تمام شبه‌عنصرهای تب را با
+ *   `display: none !important` خاموش کرده است؛ بنابراین حلقه باید روی خود
+ *   عنصر کشیده شود. outline هیچ اثری روی چیدمان ندارد، با border-radius
+ *   (تب ۸ پیکسل و میان‌بر موبایل ۵۰ پیکسل) هم شکل می‌گیرد، و با background /
+ *   border / box-shadow خود قالب (که بعضی‌شان !important هستند) درگیر نمی‌شود.
+ *
+ * رنگین‌کمان عمداً از توکن‌های قالب ساخته نشده است؛ توکن‌های رنگ قالب تک‌رنگ
+ * (تأکید سایت) هستند و درخواست کاربر «خط رنگین‌کمانی» بوده است.
+ *
+ * این محدوده تنها جایی در این فایل است که رنگ ثابت دارد و تست نگهبان قالب
+ * (tests/comments-overview-integration.test.mjs) دقیقاً همین را بررسی می‌کند:
+ * بیرون از این نشانه‌ها هیچ رنگ ثابتی مجاز نیست.
+ * ------------------------------------------------------------------------ */
+
+/*
+ * نکته‌ی مهم: رنگ حلقه جدا از عرض/سبک تعریف می‌شود. اگر رنگ هم داخل
+ * shorthand با !important بیاید، اعلان مهم بر انیمیشن اولویت پیدا می‌کند و
+ * حلقه هیچ‌وقت رنگ عوض نمی‌کند.
+ */
+.ts-co-nav-glow:not(:focus-visible) {
+  outline-width: 2px !important;
+  outline-style: solid !important;
+  outline-color: #ff4d6d;
+  outline-offset: 1px;
+  animation: ts-co-glow-rainbow 7s linear infinite;
+}
+
+/* تب «نظرات» در نوار بخش‌های دسکتاپ. */
+body.single-product #site-main .product-content .tab-panel .tabs .item.ts-co-nav-glow:not(:focus-visible) {
+  outline-width: 2px !important;
+  outline-style: solid !important;
+  outline-color: #ff4d6d;
+  outline-offset: 1px;
+}
+
+/* میان‌بر نظرات در صفحه محصول موبایل. */
+body.single-product #site-main .additional-panel li.ts-co-nav-glow:not(:focus-visible) {
+  outline-width: 2px !important;
+  outline-style: solid !important;
+  outline-color: #ff4d6d;
+  outline-offset: 1px;
+}
+
+@keyframes ts-co-glow-rainbow {
+  0% {
+    outline-color: #ff4d6d;
+    box-shadow: 0 0 10px 0 rgba(255, 77, 109, 0.45);
+  }
+  16% {
+    outline-color: #ffa94d;
+    box-shadow: 0 0 10px 0 rgba(255, 169, 77, 0.45);
+  }
+  33% {
+    outline-color: #ffd43b;
+    box-shadow: 0 0 10px 0 rgba(255, 212, 59, 0.45);
+  }
+  50% {
+    outline-color: #51cf66;
+    box-shadow: 0 0 10px 0 rgba(81, 207, 102, 0.45);
+  }
+  66% {
+    outline-color: #4dabf7;
+    box-shadow: 0 0 10px 0 rgba(77, 171, 247, 0.45);
+  }
+  83% {
+    outline-color: #9775fa;
+    box-shadow: 0 0 10px 0 rgba(151, 117, 250, 0.45);
+  }
+  100% {
+    outline-color: #ff4d6d;
+    box-shadow: 0 0 10px 0 rgba(255, 77, 109, 0.45);
+  }
+}
+
+/*
+ * تب فعال (وقتی کاربر روی «نظرات» است): سایه‌ی داخلی تأکید قالب حفظ شود و
+ * حلقه‌ی رنگین‌کمانی روی آن بنشیند.
+ */
+body.single-product #site-main .product-content .tab-panel .tabs .item.ts-co-nav-glow.active:not(:focus-visible) {
+  box-shadow:
+    inset 0 -2px 0 var(--theme-accent),
+    0 0 10px 0 rgba(255, 77, 109, 0.45) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-co-nav-glow:not(:focus-visible),
+  body.single-product #site-main .product-content .tab-panel .tabs .item.ts-co-nav-glow:not(:focus-visible),
+  body.single-product #site-main .additional-panel li.ts-co-nav-glow:not(:focus-visible) {
+    animation: none;
+    outline-color: var(--theme-accent) !important;
+    box-shadow: none;
+  }
+}
+/* ts-co:rainbow-ring:end */
